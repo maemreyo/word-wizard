@@ -6,3 +6,5 @@
 Từ bây giờ, tôi đã có các ui components trong folder `components/ui` rồi, nếu cần sử dụng chúng, hãy sử dụng nhé.
 Tiếp tục triển khai Next Steps
 use serena
+
+tôi thấy bạn đang inject raw styles, chúng ta có giải pháp tốt hơn tự implement như vậy không?

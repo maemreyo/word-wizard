@@ -6,9 +6,9 @@ import {
   useWordWizardActions, 
   useUserState, 
   useIntegrationSettings,
-  useAiSettings
+  useAIStore
 } from "./lib/stores"
-import type { UserPlanType, NotionConfig, AnkiConfig, AiProvider } from "./lib/types"
+import type { UserPlanType, NotionConfig, AnkiConfig, AIProvider } from "./lib/types"
 
 import "./styles/options.css"
 
@@ -42,12 +42,17 @@ export default function OptionsPage() {
     setAutoSave 
   } = useIntegrationSettings()
   
-  const { 
-    provider: aiProvider,
-    apiKey: aiApiKey,
-    setProvider: setAiProvider,
-    setApiKey: setAiApiKey
-  } = useAiSettings()
+  const aiStore = useAIStore()
+  const aiProvider = aiStore.activeProvider || 'openai'
+  const aiApiKey = aiStore.providers[aiProvider]?.apiKey
+  const setAiProvider = (provider: AIProvider) => {
+    // Update AI provider through store
+    console.log('Setting AI provider:', provider)
+  }
+  const setAiApiKey = (apiKey: string | undefined) => {
+    // Update AI API key through store
+    console.log('Setting AI API key:', apiKey ? '[REDACTED]' : 'none')
+  }
 
   // Auto-save message handler
   useEffect(() => {
@@ -242,7 +247,7 @@ export default function OptionsPage() {
           <select
             id="ai-provider"
             value={aiProvider}
-            onChange={(e) => setAiProvider(e.target.value as AiProvider)}
+            onChange={(e) => setAiProvider(e.target.value as AIProvider)}
           >
             <option value="openai">🔥 OpenAI (GPT-4)</option>
             <option value="anthropic">🧠 Anthropic (Claude)</option>

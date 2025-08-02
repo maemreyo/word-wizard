@@ -96,7 +96,7 @@ export class AnkiService extends ImprovedBaseService {
       if (existingNotes.length > 0) {
         // Update existing note
         const noteId = existingNotes[0]
-        await this.updateNote(noteId, wordData, config)
+        await this.updateNote(noteId, this.ensureCompleteWordData(wordData), config)
         return {
           success: true,
           noteId,
@@ -104,7 +104,7 @@ export class AnkiService extends ImprovedBaseService {
         }
       } else {
         // Create new note
-        const noteId = await this.createNote(wordData, config)
+        const noteId = await this.createNote(this.ensureCompleteWordData(wordData), config)
         return {
           success: true,
           noteId,
@@ -446,5 +446,24 @@ export class AnkiService extends ImprovedBaseService {
     }
 
     return `Anki integration failed: ${error.message || 'Unknown error'}`
+  }
+  // Helper to ensure WordData has all required properties
+  private ensureCompleteWordData(partialData: any): WordData {
+    return {
+      term: partialData.term || '',
+      ipa: partialData.ipa || '',
+      definition: partialData.definition || '',
+      examples: partialData.examples || [],
+      wordFamily: partialData.wordFamily || [],
+      synonyms: partialData.synonyms || [],
+      antonyms: partialData.antonyms || [],
+      timestamp: partialData.timestamp || Date.now(),
+      source: partialData.source || 'word-wizard-ai',
+      primaryTopic: partialData.primaryTopic,
+      cefrLevel: partialData.cefrLevel as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | undefined,
+      domain: partialData.domain,
+      complexityLevel: partialData.complexityLevel,
+      frequencyScore: partialData.frequencyScore
+    } as WordData
   }
 }

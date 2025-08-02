@@ -79,7 +79,7 @@ export class NotionService extends ImprovedBaseService {
       
       if (existingPageId) {
         // Update existing page
-        const pageUrl = await this.updateExistingPage(existingPageId, wordData, config)
+        const pageUrl = await this.updateExistingPage(existingPageId, this.ensureCompleteWordData(wordData), config)
         return {
           success: true,
           pageId: existingPageId,
@@ -88,7 +88,7 @@ export class NotionService extends ImprovedBaseService {
         }
       } else {
         // Create new page
-        const { pageId, pageUrl } = await this.createNewPage(wordData, config)
+        const { pageId, pageUrl } = await this.createNewPage(this.ensureCompleteWordData(wordData), config)
         return {
           success: true,
           pageId,
@@ -499,5 +499,25 @@ export class NotionService extends ImprovedBaseService {
     }
 
     return `Notion integration failed: ${error.message || 'Unknown error'}`
+  }
+
+  // Helper to ensure WordData has all required properties
+  private ensureCompleteWordData(partialData: any): WordData {
+    return {
+      term: partialData.term || '',
+      ipa: partialData.ipa || '',
+      definition: partialData.definition || '',
+      examples: partialData.examples || [],
+      wordFamily: partialData.wordFamily || [],
+      synonyms: partialData.synonyms || [],
+      antonyms: partialData.antonyms || [],
+      timestamp: partialData.timestamp || Date.now(),
+      source: partialData.source || 'word-wizard-ai',
+      primaryTopic: partialData.primaryTopic,
+      cefrLevel: partialData.cefrLevel as 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | undefined,
+      domain: partialData.domain,
+      complexityLevel: partialData.complexityLevel,
+      frequencyScore: partialData.frequencyScore
+    } as WordData
   }
 }

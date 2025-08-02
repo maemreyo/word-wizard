@@ -192,6 +192,31 @@ export interface HighlightData {
   timestamp: number
 }
 
+// Extension and Word Wizard state interfaces
+export interface ExtensionState {
+  isActive: boolean
+  currentTab?: chrome.tabs.Tab
+  settings: ExtensionSettings
+}
+
+export interface ExtensionSettings {
+  theme: 'light' | 'dark' | 'auto'
+  notifications: boolean
+  language: string
+  defaultComplexity?: 'basic' | 'intermediate' | 'advanced'
+}
+
+export interface WordWizardState {
+  isProcessing: boolean
+  currentLookup?: WordData
+  history: WordData[]
+  cache: Map<string, WordData>
+  integrations: {
+    notion: NotionConfig
+    anki: AnkiConfig
+  }
+}
+
 // Context Menu types
 export interface ContextMenuAction {
   id: string

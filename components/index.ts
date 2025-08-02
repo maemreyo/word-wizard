@@ -2,10 +2,10 @@
 // Following the established export pattern for clean imports
 
 // Existing components
-export { AiChatPanel } from './ai-chat-panel'
+export { AIChatPanel } from './ai-chat-panel'
 export { UsageTracker } from './usage-tracker'
 export { SubscriptionStatus } from './subscription-status'
-export { AiQuickActions } from './ai-quick-actions'
+export { AIQuickActions } from './ai-quick-actions'
 export { UpgradeModal } from './upgrade-modal'
 
 // Word Wizard specific components

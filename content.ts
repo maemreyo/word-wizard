@@ -3,6 +3,7 @@
 
 import { MESSAGE_TYPES } from './lib/utils/constants'
 import type { TextSelection, HighlightData, ExtensionMessage } from './lib/types'
+import { initWordWizardStyles, ContentStyleManager } from './lib/utils/content-styles'
 
 class ContentScript {
   private selectedText: string = ''
@@ -10,8 +11,16 @@ class ContentScript {
   private contextMenuItems: Set<string> = new Set()
   private highlights: Map<string, HTMLElement> = new Map()
   private lastShiftTime: number = 0 // For double-shift detection
+  private styleManager: ContentStyleManager
 
   constructor() {
+    // Initialize modern styling system
+    this.styleManager = initWordWizardStyles({
+      theme: 'auto',
+      primaryColor: '#6366f1',
+      accentColor: '#a855f7'
+    })
+    
     this.init()
   }
 
@@ -20,8 +29,7 @@ class ContentScript {
     this.setupSelectionListener()
     this.setupContextMenu()
     this.setupKeyboardShortcuts()
-    this.injectStyles()
-    this.injectWordWizardStyles()
+    // Modern styling system is already initialized in constructor
   }
 
   private setupMessageListener() {
@@ -59,7 +67,7 @@ class ContentScript {
           return true
 
         case 'WORD_WIZARD_INJECT_STYLES':
-          this.injectWordWizardStyles()
+          // Styles are already injected via modern system
           sendResponse({ success: true })
           return true
 
@@ -204,8 +212,6 @@ class ContentScript {
     })
   }
 
-  // All the other methods will be added next...
-  
   // Helper methods for Word Wizard
   private handleWordWizardLookup() {
     if (!this.selectedText) return
@@ -236,26 +242,356 @@ class ContentScript {
   }
 
   private getEnhancedContext(selectedText: string): string {
-    return selectedText // Simplified for now
+    if (!this.selectionRange) return selectedText
+
+    try {
+      // Get the parent element containing the selection
+      const container = this.selectionRange.commonAncestorContainer
+      const parentElement = container.nodeType === Node.TEXT_NODE 
+        ? container.parentElement 
+        : container as Element
+
+      if (parentElement) {
+        // Get surrounding text context (up to 200 characters before and after)
+        const fullText = parentElement.textContent || ''
+        const selectedIndex = fullText.indexOf(selectedText)
+        
+        if (selectedIndex !== -1) {
+          const start = Math.max(0, selectedIndex - 100)
+          const end = Math.min(fullText.length, selectedIndex + selectedText.length + 100)
+          return fullText.substring(start, end).trim()
+        }
+      }
+    } catch (error) {
+      console.warn('Error getting enhanced context:', error)
+    }
+
+    return selectedText
   }
 
-  // Stub methods - will implement fully later
-  private injectStyles() { }
-  private injectWordWizardStyles() { }
-  private handleGetSelectedText(sendResponse: any) { }
-  private handleHighlightText(data: any, sendResponse: any) { }
-  private clearAllHighlights() { }
-  private handleGetPageInfo(sendResponse: any) { }
-  private handleWordWizardGetSelection(sendResponse: any) { }
-  private handleWordWizardHighlight(data: any, sendResponse: any) { }
-  private handleWordWizardTooltip(data: any, sendResponse: any) { }
-  private notifySelectionChange(text: string) { }
-  private showSelectionTooltip(x: number, y: number) { }
-  private getSelectionRect() { return { x: 0, y: 0 } }
-  private processSelectedText() { }
-  private highlightSelectedText() { }
-  private createWordWizardHighlight(data: any) { }
-  private showWordWizardQuickTooltip(text: string, x: number, y: number) { }
+  // Modern styling system is handled by ContentStyleManager
+  // All styles are automatically injected and managed
+
+  // Message handlers
+  private handleGetSelectedText(sendResponse: (response: any) => void) {
+    sendResponse({
+      success: true,
+      data: {
+        text: this.selectedText,
+        hasSelection: this.selectedText.length > 0,
+        selectionRect: this.getSelectionRect()
+      }
+    })
+  }
+
+  private handleHighlightText(data: HighlightData, sendResponse: (response: any) => void) {
+    try {
+      if (!this.selectionRange) {
+        sendResponse({ success: false, error: 'No selection range available' })
+        return
+      }
+
+      // Create highlight element
+      const span = document.createElement('span')
+      span.className = 'extension-highlight'
+      span.style.backgroundColor = data.color || '#fef08a'
+      
+      if (data.note) {
+        span.title = data.note
+      }
+
+      // Wrap the selection
+      try {
+        this.selectionRange.surroundContents(span)
+        
+        // Store the highlight
+        const highlightId = `highlight-${Date.now()}`
+        span.setAttribute('data-highlight-id', highlightId)
+        this.highlights.set(highlightId, span)
+
+        sendResponse({ 
+          success: true, 
+          data: { highlightId, text: data.text } 
+        })
+      } catch (error) {
+        // Fallback for complex selections
+        const contents = this.selectionRange.extractContents()
+        span.appendChild(contents)
+        this.selectionRange.insertNode(span)
+        
+        const highlightId = `highlight-${Date.now()}`
+        span.setAttribute('data-highlight-id', highlightId)
+        this.highlights.set(highlightId, span)
+
+        sendResponse({ 
+          success: true, 
+          data: { highlightId, text: data.text } 
+        })
+      }
+    } catch (error) {
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to create highlight' 
+      })
+    }
+  }
+
+  private clearAllHighlights() {
+    // Remove extension highlights
+    document.querySelectorAll('.extension-highlight').forEach(element => {
+      const parent = element.parentNode
+      if (parent) {
+        parent.replaceChild(document.createTextNode(element.textContent || ''), element)
+        parent.normalize()
+      }
+    })
+
+    // Remove Word Wizard highlights
+    document.querySelectorAll('.word-wizard-highlight').forEach(element => {
+      const parent = element.parentNode
+      if (parent) {
+        parent.replaceChild(document.createTextNode(element.textContent || ''), element)
+        parent.normalize()
+      }
+    })
+
+    // Clear stored highlights
+    this.highlights.clear()
+
+    // Remove tooltips
+    document.querySelectorAll('.extension-tooltip, .word-wizard-tooltip, .word-wizard-quick-tooltip').forEach(tooltip => {
+      tooltip.remove()
+    })
+  }
+
+  private handleGetPageInfo(sendResponse: (response: any) => void) {
+    const pageInfo = {
+      url: window.location.href,
+      title: document.title,
+      domain: window.location.hostname,
+      selectedText: this.selectedText,
+      hasSelection: this.selectedText.length > 0,
+      wordCount: document.body.textContent?.split(/\s+/).length || 0,
+      language: document.documentElement.lang || 'unknown'
+    }
+
+    sendResponse({
+      success: true,
+      data: pageInfo
+    })
+  }
+
+  // Word Wizard specific handlers
+  private handleWordWizardGetSelection(sendResponse: (response: any) => void) {
+    sendResponse({
+      success: true,
+      data: {
+        selectedText: this.selectedText,
+        context: this.getEnhancedContext(this.selectedText),
+        selectionRect: this.getSelectionRect(),
+        pageInfo: {
+          url: window.location.href,
+          title: document.title,
+          domain: window.location.hostname
+        }
+      }
+    })
+  }
+
+  private handleWordWizardHighlight(data: any, sendResponse: (response: any) => void) {
+    try {
+      this.createWordWizardHighlight(data)
+      sendResponse({ success: true, data: { highlighted: true } })
+    } catch (error) {
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to create Word Wizard highlight' 
+      })
+    }
+  }
+
+  private handleWordWizardTooltip(data: any, sendResponse: (response: any) => void) {
+    try {
+      this.showWordWizardTooltip(data.wordData, data.x || 0, data.y || 0)
+      sendResponse({ success: true, data: { shown: true } })
+    } catch (error) {
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to show Word Wizard tooltip' 
+      })
+    }
+  }
+
+  // Utility methods
+  private notifySelectionChange(text: string) {
+    chrome.runtime.sendMessage({
+      type: 'SELECTION_CHANGED',
+      data: {
+        selectedText: text,
+        context: this.getEnhancedContext(text),
+        timestamp: Date.now()
+      }
+    }).catch(() => {
+      // Ignore errors - background script might not be ready
+    })
+  }
+
+  private showSelectionTooltip(x: number, y: number) {
+    // Remove existing tooltips
+    document.querySelectorAll('.extension-tooltip').forEach(tooltip => tooltip.remove())
+
+    if (!this.selectedText || this.selectedText.length < 2) return
+
+    const tooltip = document.createElement('div')
+    tooltip.className = 'extension-tooltip'
+    tooltip.textContent = `🧙‍♂️ Press Ctrl+Shift+W to lookup "${this.selectedText}"`
+    
+    // Position tooltip
+    tooltip.style.left = Math.min(x, window.innerWidth - 220) + 'px'
+    tooltip.style.top = (y + 10) + 'px'
+    
+    document.body.appendChild(tooltip)
+    
+    // Show tooltip with animation
+    setTimeout(() => tooltip.classList.add('show'), 10)
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      tooltip.classList.remove('show')
+      setTimeout(() => tooltip.remove(), 200)
+    }, 3000)
+  }
+
+  private getSelectionRect() {
+    if (!this.selectionRange) return { x: 0, y: 0, width: 0, height: 0 }
+
+    try {
+      const rect = this.selectionRange.getBoundingClientRect()
+      return {
+        x: rect.left + window.scrollX,
+        y: rect.top + window.scrollY,
+        width: rect.width,
+        height: rect.height
+      }
+    } catch (error) {
+      return { x: 0, y: 0, width: 0, height: 0 }
+    }
+  }
+
+  private processSelectedText() {
+    if (!this.selectedText) return
+
+    chrome.runtime.sendMessage({
+      type: 'PROCESS_FEATURE',
+      data: {
+        input: this.selectedText,
+        options: {
+          priority: 'normal',
+          timeout: 10000
+        }
+      }
+    })
+  }
+
+  private highlightSelectedText() {
+    if (!this.selectedText || !this.selectionRange) return
+
+    this.handleHighlightText({
+      text: this.selectedText,
+      color: '#fef08a',
+      timestamp: Date.now()
+    }, () => {})
+  }
+
+  private createWordWizardHighlight(data: { text: string; difficulty?: string }) {
+    if (!this.selectionRange) return
+
+    try {
+      const span = document.createElement('span')
+      span.className = `word-wizard-highlight ${data.difficulty ? `difficulty-${data.difficulty}` : ''}`
+      span.setAttribute('data-word-wizard', 'true')
+      span.setAttribute('data-difficulty', data.difficulty || 'medium')
+      span.title = `🧙‍♂️ Word Wizard: ${data.text} (${data.difficulty || 'medium'} difficulty)`
+
+      // Add click handler for Word Wizard popup
+      span.addEventListener('click', (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        
+        chrome.runtime.sendMessage({
+          type: 'WORD_WIZARD_LOOKUP',
+          data: {
+            term: data.text,
+            context: this.getEnhancedContext(data.text)
+          }
+        })
+      })
+
+      // Wrap the selection
+      this.selectionRange.surroundContents(span)
+    } catch (error) {
+      console.warn('Failed to create Word Wizard highlight:', error)
+    }
+  }
+
+  private showWordWizardQuickTooltip(text: string, x: number, y: number) {
+    // Remove existing quick tooltips
+    document.querySelectorAll('.word-wizard-quick-tooltip').forEach(tooltip => tooltip.remove())
+
+    const tooltip = document.createElement('div')
+    tooltip.className = 'word-wizard-quick-tooltip'
+    tooltip.textContent = `✨ Added "${text}" to Word Wizard`
+    
+    // Position tooltip
+    tooltip.style.left = Math.min(x - 50, window.innerWidth - 150) + 'px'
+    tooltip.style.top = (y - 30) + 'px'
+    
+    document.body.appendChild(tooltip)
+    
+    // Show tooltip with animation
+    setTimeout(() => tooltip.classList.add('show'), 10)
+    
+    // Auto-hide after 2 seconds
+    setTimeout(() => {
+      tooltip.classList.remove('show')
+      setTimeout(() => tooltip.remove(), 200)
+    }, 2000)
+  }
+
+  private showWordWizardTooltip(wordData: any, x: number, y: number) {
+    // Remove existing Word Wizard tooltips
+    document.querySelectorAll('.word-wizard-tooltip').forEach(tooltip => tooltip.remove())
+
+    const tooltip = document.createElement('div')
+    tooltip.className = 'word-wizard-tooltip'
+    
+    const content = `
+      <div style="font-weight: bold; margin-bottom: 4px;">🧙‍♂️ ${wordData.term}</div>
+      <div style="font-size: 11px; opacity: 0.9; margin-bottom: 6px;">/${wordData.ipa || 'pronunciation'}/</div>
+      <div style="margin-bottom: 6px;">${wordData.definition || 'Loading definition...'}</div>
+      ${wordData.examples && wordData.examples.length > 0 ? 
+        `<div style="font-size: 11px; opacity: 0.8; font-style: italic;">"${wordData.examples[0]}"</div>` : 
+        ''
+      }
+    `
+    
+    tooltip.innerHTML = content
+    
+    // Position tooltip
+    tooltip.style.left = Math.min(x, window.innerWidth - 300) + 'px'
+    tooltip.style.top = (y + 15) + 'px'
+    
+    document.body.appendChild(tooltip)
+    
+    // Show tooltip with animation
+    setTimeout(() => tooltip.classList.add('show'), 10)
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      tooltip.classList.remove('show')
+      setTimeout(() => tooltip.remove(), 300)
+    }, 5000)
+  }
 }
 
 // Initialize content script when DOM is ready

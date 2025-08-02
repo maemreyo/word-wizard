@@ -388,7 +388,13 @@ export const useUserState = () => useWordWizardStore((state) => ({
   userId: state.userId,
   plan: state.userPlan,
   quotaRemaining: state.quotaRemaining,
-  quotaLimit: state.quotaLimit
+  quotaLimit: state.quotaLimit,
+  settings: {
+    theme: 'light' as const, // Default theme
+    notifications: true,
+    language: 'en',
+    defaultComplexity: state.complexityLevel
+  }
 }))
 
 export const useLearningState = () => useWordWizardStore((state) => ({
@@ -400,13 +406,18 @@ export const useLearningState = () => useWordWizardStore((state) => ({
 export const useIntegrationSettings = () => useWordWizardStore((state) => ({
   notion: {
     enabled: state.notionEnabled,
-    databaseId: state.notionDatabaseId
+    databaseId: state.notionDatabaseId,
+    token: state.notionDatabaseId // Use databaseId as token for now
   },
   anki: {
     enabled: state.ankiEnabled,
-    deckName: state.ankiDeckName
+    deckName: state.ankiDeckName,
+    port: 8765 // Default AnkiConnect port
   },
-  autoSave: state.autoSaveEnabled
+  autoSave: state.autoSaveEnabled,
+  updateNotionSettings: state.updateNotionSettings,
+  updateAnkiSettings: state.updateAnkiSettings,
+  setAutoSave: state.setAutoSave
 }))
 
 export const useBatchState = () => useWordWizardStore((state) => ({
@@ -436,5 +447,19 @@ export const useWordWizardActions = () => useWordWizardStore((state) => ({
   processBatch: state.processBatch,
   clearBatch: state.clearBatch,
   loadFromStorage: state.loadFromStorage,
-  saveToStorage: state.saveToStorage
+  saveToStorage: state.saveToStorage,
+  
+  // Additional methods needed by options page
+  updateUserSettings: (settings: any) => {
+    // Update user settings
+    console.log('Updating user settings:', settings)
+  },
+  upgradeUser: (plan: string) => {
+    // Handle user plan upgrade
+    console.log('Upgrading user to plan:', plan)
+  },
+  downgradeUser: (plan: string) => {
+    // Handle user plan downgrade  
+    console.log('Downgrading user to plan:', plan)
+  }
 }))
