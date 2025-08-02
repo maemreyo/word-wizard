@@ -1,21 +1,29 @@
 // Subscription Status - Shows current subscription details and management
 // Billing portal access and subscription controls
 
-import React, { useState } from 'react'
-import { 
-  Crown, 
-  Calendar, 
-  CreditCard, 
-  AlertTriangle, 
-  CheckCircle, 
-  XCircle,
-  ExternalLink,
-  Loader2,
-  Settings,
-  RefreshCw
+import { format, formatDistanceToNow } from 'date-fns'
+import {
+    AlertTriangle,
+    Calendar,
+    CheckCircle,
+    CreditCard,
+    Crown,
+    ExternalLink,
+    Loader2,
+    RefreshCw,
+    Settings,
+    XCircle
 } from 'lucide-react'
-import { useSubscription, usePaymentActions, useAuth } from '../lib/stores/payment-store'
-import { formatDistanceToNow, format } from 'date-fns'
+import React, { useState } from 'react'
+import { useAuth, usePaymentActions, useSubscription } from '../lib/stores/payment-store'
+
+// shadcn/ui components
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
 
 interface SubscriptionStatusProps {
   className?: string
@@ -90,8 +98,7 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
     if (!subscription) {
       return {
         status: 'Free',
-        color: 'text-gray-600 dark:text-gray-400',
-        bgColor: 'bg-gray-100 dark:bg-gray-800',
+        variant: 'secondary' as const,
         icon: XCircle,
         description: 'No active subscription'
       }
@@ -101,48 +108,42 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
       case 'active':
         return {
           status: 'Active',
-          color: 'text-green-600 dark:text-green-400',
-          bgColor: 'bg-green-100 dark:bg-green-900/30',
+          variant: 'default' as const,
           icon: CheckCircle,
           description: 'Your subscription is active'
         }
       case 'trialing':
         return {
           status: 'Trial',
-          color: 'text-blue-600 dark:text-blue-400',
-          bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+          variant: 'secondary' as const,
           icon: Crown,
           description: 'Free trial active'
         }
       case 'canceled':
         return {
           status: 'Canceled',
-          color: 'text-yellow-600 dark:text-yellow-400',
-          bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
+          variant: 'outline' as const,
           icon: AlertTriangle,
           description: 'Canceled - active until period ends'
         }
       case 'past_due':
         return {
           status: 'Past Due',
-          color: 'text-red-600 dark:text-red-400',
-          bgColor: 'bg-red-100 dark:bg-red-900/30',
+          variant: 'destructive' as const,
           icon: AlertTriangle,
           description: 'Payment failed - please update billing'
         }
       case 'unpaid':
         return {
           status: 'Unpaid',
-          color: 'text-red-600 dark:text-red-400',
-          bgColor: 'bg-red-100 dark:bg-red-900/30',
+          variant: 'destructive' as const,
           icon: XCircle,
           description: 'Payment required'
         }
       default:
         return {
           status: subscription.status,
-          color: 'text-gray-600 dark:text-gray-400',
-          bgColor: 'bg-gray-100 dark:bg-gray-800',
+          variant: 'secondary' as const,
           icon: XCircle,
           description: 'Unknown status'
         }
@@ -151,13 +152,13 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
 
   if (!isAuthenticated) {
     return (
-      <div className={`p-4 bg-gray-50 dark:bg-gray-800 rounded-lg ${className}`}>
-        <div className="text-center">
-          <p className="text-gray-600 dark:text-gray-400">
+      <Card className={className}>
+        <CardContent className="p-6 text-center">
+          <p className="text-muted-foreground">
             Please sign in to view subscription status
           </p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     )
   }
 
@@ -167,68 +168,63 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
   const isExpiringSoon = subscription && subscription.currentPeriodEnd - now < 7 * 24 * 60 * 60 * 1000 // 7 days
 
   return (
-    <div className={`bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 ${className}`}>
+    <Card className={className}>
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${statusInfo.bgColor}`}>
-              <StatusIcon className={`w-5 h-5 ${statusInfo.color}`} />
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white">
-                Subscription Status
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {statusInfo.description}
-              </p>
-            </div>
+      <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
+        <div className="flex items-center gap-3">
+          <Avatar>
+            <AvatarFallback>
+              <StatusIcon className="w-5 h-5" />
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <CardTitle className="text-base">Subscription Status</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              {statusInfo.description}
+            </p>
           </div>
-
-          <button
-            onClick={handleRefresh}
-            disabled={isLoading === 'refresh'}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-            title="Refresh subscription status"
-          >
-            <RefreshCw 
-              size={16} 
-              className={`text-gray-600 dark:text-gray-400 ${
-                isLoading === 'refresh' ? 'animate-spin' : ''
-              }`} 
-            />
-          </button>
         </div>
-      </div>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isLoading === 'refresh'}
+          title="Refresh subscription status"
+        >
+          <RefreshCw 
+            size={16} 
+            className={isLoading === 'refresh' ? 'animate-spin' : ''} 
+          />
+        </Button>
+      </CardHeader>
 
       {/* Content */}
-      <div className="p-4">
+      <CardContent className="space-y-4">
         {subscription && plan ? (
-          <div className="space-y-4">
+          <>
             {/* Plan Info */}
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-medium text-gray-900 dark:text-white">
-                  {plan.displayName}
-                </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {plan.description}
-                </p>
+                <h4 className="font-medium">{plan.displayName}</h4>
+                <p className="text-sm text-muted-foreground">{plan.description}</p>
               </div>
-              <div className={`px-3 py-1 rounded-full text-sm font-medium ${statusInfo.bgColor} ${statusInfo.color}`}>
+              <Badge variant={statusInfo.variant}>
                 {statusInfo.status}
-              </div>
+              </Badge>
             </div>
 
             {showDetails && (
               <>
+                <Separator />
+                
                 {/* Billing Period */}
-                <div className="flex items-center justify-between py-2 border-t border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex items-center justify-between py-2">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar size={14} />
                     <span>Current period</span>
                   </div>
-                  <div className="text-sm text-gray-900 dark:text-white">
+                  <div className="text-sm">
                     {format(subscription.currentPeriodStart, 'MMM d')} - {format(subscription.currentPeriodEnd, 'MMM d, yyyy')}
                   </div>
                 </div>
@@ -236,11 +232,11 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
                 {/* Next billing */}
                 {subscription.status === 'active' && !subscription.cancelAtPeriodEnd && (
                   <div className="flex items-center justify-between py-2">
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <CreditCard size={14} />
                       <span>Next billing</span>
                     </div>
-                    <div className="text-sm text-gray-900 dark:text-white">
+                    <div className="text-sm">
                       {formatDistanceToNow(subscription.currentPeriodEnd, { addSuffix: true })}
                     </div>
                   </div>
@@ -249,11 +245,11 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
                 {/* Trial end */}
                 {subscription.status === 'trialing' && subscription.trialEnd && (
                   <div className="flex items-center justify-between py-2">
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Crown size={14} />
                       <span>Trial ends</span>
                     </div>
-                    <div className="text-sm text-gray-900 dark:text-white">
+                    <div className="text-sm">
                       {formatDistanceToNow(subscription.trialEnd, { addSuffix: true })}
                     </div>
                   </div>
@@ -261,48 +257,43 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
 
                 {/* Cancellation notice */}
                 {subscription.cancelAtPeriodEnd && (
-                  <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
-                    <div className="flex items-center gap-2 text-sm text-yellow-700 dark:text-yellow-300">
-                      <AlertTriangle size={14} />
-                      <span>
-                        Your subscription will end on {format(subscription.currentPeriodEnd, 'MMM d, yyyy')}
-                      </span>
-                    </div>
-                  </div>
+                  <Alert>
+                    <AlertTriangle size={14} />
+                    <AlertDescription>
+                      Your subscription will end on {format(subscription.currentPeriodEnd, 'MMM d, yyyy')}
+                    </AlertDescription>
+                  </Alert>
                 )}
 
                 {/* Expiring soon notice */}
                 {isExpiringSoon && !subscription.cancelAtPeriodEnd && (
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
-                    <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
-                      <AlertTriangle size={14} />
-                      <span>
-                        Your subscription renews in {formatDistanceToNow(subscription.currentPeriodEnd)}
-                      </span>
-                    </div>
-                  </div>
+                  <Alert>
+                    <AlertTriangle size={14} />
+                    <AlertDescription>
+                      Your subscription renews in {formatDistanceToNow(subscription.currentPeriodEnd)}
+                    </AlertDescription>
+                  </Alert>
                 )}
 
                 {/* Payment issue notice */}
                 {(subscription.status === 'past_due' || subscription.status === 'unpaid') && (
-                  <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
-                    <div className="flex items-center gap-2 text-sm text-red-700 dark:text-red-300">
-                      <AlertTriangle size={14} />
-                      <span>
-                        Please update your payment method to continue using premium features
-                      </span>
-                    </div>
-                  </div>
+                  <Alert variant="destructive">
+                    <AlertTriangle size={14} />
+                    <AlertDescription>
+                      Please update your payment method to continue using premium features
+                    </AlertDescription>
+                  </Alert>
                 )}
               </>
             )}
 
             {/* Actions */}
-            <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <button
+            <Separator />
+            <div className="flex gap-3">
+              <Button
                 onClick={handleBillingPortal}
                 disabled={isLoading === 'portal'}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors font-medium"
+                className="flex items-center gap-2"
               >
                 {isLoading === 'portal' ? (
                   <>
@@ -316,13 +307,14 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
                     <ExternalLink size={14} />
                   </>
                 )}
-              </button>
+              </Button>
 
               {subscription.cancelAtPeriodEnd ? (
-                <button
+                <Button
                   onClick={handleReactivateSubscription}
                   disabled={isLoading === 'reactivate'}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 transition-colors"
+                  variant="secondary"
+                  className="flex items-center gap-2"
                 >
                   {isLoading === 'reactivate' ? (
                     <>
@@ -335,12 +327,13 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
                       Reactivate
                     </>
                   )}
-                </button>
+                </Button>
               ) : subscription.status === 'active' ? (
-                <button
+                <Button
                   onClick={handleCancelSubscription}
                   disabled={isLoading === 'cancel'}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 transition-colors"
+                  variant="destructive"
+                  className="flex items-center gap-2"
                 >
                   {isLoading === 'cancel' ? (
                     <>
@@ -353,31 +346,28 @@ export const SubscriptionStatus: React.FC<SubscriptionStatusProps> = ({
                       Cancel
                     </>
                   )}
-                </button>
+                </Button>
               ) : null}
             </div>
-          </div>
+          </>
         ) : (
           // No subscription
-          <div className="text-center py-4">
-            <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <Crown className="w-8 h-8 text-gray-400" />
-            </div>
-            <h4 className="font-medium text-gray-900 dark:text-white mb-2">
-              No Active Subscription
-            </h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          <div className="text-center py-6">
+            <Avatar className="w-16 h-16 mx-auto mb-4">
+              <AvatarFallback className="bg-muted">
+                <Crown className="w-8 h-8 text-muted-foreground" />
+              </AvatarFallback>
+            </Avatar>
+            <h4 className="font-medium mb-2">No Active Subscription</h4>
+            <p className="text-sm text-muted-foreground mb-4">
               Upgrade to unlock premium features and unlimited usage
             </p>
-            <button
-              onClick={() => showUpgrade()}
-              className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
-            >
+            <Button onClick={() => showUpgrade()}>
               View Plans
-            </button>
+            </Button>
           </div>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

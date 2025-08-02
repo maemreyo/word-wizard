@@ -1,13 +1,23 @@
 // AI Chat Panel - Full-featured AI chat interface
 // Modern chat UI with streaming support and conversation management
 
-import React, { useState, useRef, useEffect } from 'react'
-import { Send, Bot, User, Settings, Plus, Trash2, Copy, RefreshCw } from 'lucide-react'
-import { useAIStore, useAIActions, useActiveConversation, useAIProviders } from '../lib/stores/ai-store'
-import { AIService } from '../lib/services/ai-service'
-import { marked } from 'marked'
 import { formatDistanceToNow } from 'date-fns'
+import { Bot, Copy, Plus, RefreshCw, Send, Settings, User, X } from 'lucide-react'
+import { marked } from 'marked'
+import React, { useEffect, useRef, useState } from 'react'
+import { AIService } from '../lib/services/ai-service'
+import { useActiveConversation, useAIActions, useAIProviders, useAIStore } from '../lib/stores/ai-store'
 import type { ChatMessage } from '../lib/types'
+
+// shadcn/ui components
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Separator } from '@/components/ui/separator'
+import { Textarea } from '@/components/ui/textarea'
 
 interface AIChatPanelProps {
   className?: string
@@ -141,32 +151,30 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
         className={`flex gap-3 p-4 ${isUser ? 'justify-end' : 'justify-start'}`}
       >
         {isAssistant && (
-          <div className="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-            <Bot size={16} className="text-white" />
-          </div>
+          <Avatar className="h-8 w-8 flex-shrink-0">
+            <AvatarFallback className="bg-primary text-primary-foreground">
+              <Bot size={16} />
+            </AvatarFallback>
+          </Avatar>
         )}
         
         <div className={`max-w-[80%] ${isUser ? 'order-first' : ''}`}>
-          <div
-            className={`p-3 rounded-lg ${
-              isUser
-                ? 'bg-blue-500 text-white ml-auto'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
-            }`}
-          >
-            {isAssistant && message.content.includes('```') ? (
-              <div 
-                className="prose dark:prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ 
-                  __html: String(typeof marked.parse === 'function' ? marked.parse(message.content) : marked(message.content))
-                }}
-              />
-            ) : (
-              <div className="whitespace-pre-wrap">{message.content}</div>
-            )}
-          </div>
+          <Card className={`${isUser ? 'ml-auto bg-primary text-primary-foreground' : ''}`}>
+            <CardContent className="p-3">
+              {isAssistant && message.content.includes('```') ? (
+                <div 
+                  className="prose dark:prose-invert max-w-none text-sm"
+                  dangerouslySetInnerHTML={{ 
+                    __html: String(typeof marked.parse === 'function' ? marked.parse(message.content) : marked(message.content))
+                  }}
+                />
+              ) : (
+                <div className="whitespace-pre-wrap text-sm">{message.content}</div>
+              )}
+            </CardContent>
+          </Card>
           
-          <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+          <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
             {message.timestamp && (
               <span>
                 {formatDistanceToNow(message.timestamp, { addSuffix: true })}
@@ -174,183 +182,204 @@ export const AIChatPanel: React.FC<AIChatPanelProps> = ({
             )}
             
             {isAssistant && (
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => copyToClipboard(message.content)}
-                className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded"
+                className="h-6 w-6 p-0"
                 title="Copy message"
               >
                 <Copy size={12} />
-              </button>
+              </Button>
             )}
           </div>
         </div>
 
         {isUser && (
-          <div className="flex-shrink-0 w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center">
-            <User size={16} className="text-white" />
-          </div>
+          <Avatar className="h-8 w-8 flex-shrink-0">
+            <AvatarFallback className="bg-secondary">
+              <User size={16} />
+            </AvatarFallback>
+          </Avatar>
         )}
       </div>
     )
   }
 
   return (
-    <div className={`flex flex-col h-full bg-white dark:bg-gray-900 ${className}`}>
+    <Card className={`flex flex-col h-full ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+      <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
         <div className="flex items-center gap-3">
-          <Bot className="text-blue-500" size={24} />
+          <Bot className="text-primary" size={24} />
           <div>
-            <h2 className="font-semibold text-gray-900 dark:text-white">
-              AI Assistant
-            </h2>
-            <p className="text-xs text-gray-500">
-              {activeProvider} • {providers[activeProvider]?.model || 'No model'}
-            </p>
+            <h2 className="font-semibold">AI Assistant</h2>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-xs">
+                {activeProvider}
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                {providers[activeProvider]?.model || 'No model'}
+              </span>
+            </div>
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          <button
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => createConversation()}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
             title="New conversation"
           >
             <Plus size={16} />
-          </button>
+          </Button>
           
-          <button
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+          <Button
+            variant="ghost"
+            size="sm"
             title="Settings"
           >
             <Settings size={16} />
-          </button>
+          </Button>
           
           {onClose && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
               title="Close"
             >
-              ×
-            </button>
+              <X size={16} />
+            </Button>
           )}
         </div>
-      </div>
+      </CardHeader>
 
       {/* Conversation List */}
       {conversations.length > 1 && (
-        <div className="p-2 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex gap-2 overflow-x-auto">
-            {conversations.slice(0, 5).map((conv) => (
-              <button
-                key={conv.id}
-                onClick={() => setActiveConversation(conv.id)}
-                className={`flex-shrink-0 px-3 py-1 text-xs rounded-lg truncate max-w-32 ${
-                  activeConversation?.id === conv.id
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
-              >
-                {conv.title}
-              </button>
-            ))}
+        <>
+          <div className="px-4 pb-2">
+            <ScrollArea className="w-full">
+              <div className="flex gap-2">
+                {conversations.slice(0, 5).map((conv) => (
+                  <Button
+                    key={conv.id}
+                    variant={activeConversation?.id === conv.id ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setActiveConversation(conv.id)}
+                    className="flex-shrink-0 max-w-32 truncate text-xs"
+                  >
+                    {conv.title}
+                  </Button>
+                ))}
+              </div>
+            </ScrollArea>
           </div>
-        </div>
+          <Separator />
+        </>
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
-        {!activeConversation || activeConversation.messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full p-8 text-center">
-            <div className="max-w-sm">
-              <Bot size={48} className="mx-auto mb-4 text-gray-400" />
-              <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
-                Start a conversation
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400">
-                Ask me anything! I can help with text analysis, summarization, translation, and more.
-              </p>
-              {selectedText && (
-                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
-                    Selected text ready to analyze
+      <CardContent className="flex-1 p-0">
+        <ScrollArea className="h-full">
+          {!activeConversation || activeConversation.messages.length === 0 ? (
+            <div className="flex items-center justify-center h-full p-8 text-center">
+              <div className="max-w-sm space-y-4">
+                <Bot size={48} className="mx-auto text-muted-foreground" />
+                <div className="space-y-2">
+                  <h3 className="text-lg font-medium">Start a conversation</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Ask me anything! I can help with text analysis, summarization, translation, and more.
                   </p>
                 </div>
-              )}
+                {selectedText && (
+                  <Alert>
+                    <AlertDescription className="text-sm">
+                      Selected text ready to analyze
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="pb-4">
-            {activeConversation.messages.map(renderMessage)}
-            
-            {/* Streaming content */}
-            {isProcessing && streamingContent && (
-              <div className="flex gap-3 p-4">
-                <div className="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                  <Bot size={16} className="text-white" />
-                </div>
-                <div className="max-w-[80%]">
-                  <div className="p-3 rounded-lg bg-gray-100 dark:bg-gray-700">
-                    <div className="whitespace-pre-wrap">{streamingContent}</div>
-                    <div className="mt-2">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                      </div>
-                    </div>
+          ) : (
+            <div className="pb-4">
+              {activeConversation.messages.map(renderMessage)}
+              
+              {/* Streaming content */}
+              {isProcessing && streamingContent && (
+                <div className="flex gap-3 p-4">
+                  <Avatar className="h-8 w-8 flex-shrink-0">
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      <Bot size={16} />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="max-w-[80%]">
+                    <Card>
+                      <CardContent className="p-3">
+                        <div className="whitespace-pre-wrap text-sm">{streamingContent}</div>
+                        <div className="mt-2 flex space-x-1">
+                          <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
                 </div>
-              </div>
-            )}
-            
-            {/* Loading indicator */}
-            {isProcessing && !streamingContent && (
-              <div className="flex gap-3 p-4">
-                <div className="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                  <RefreshCw size={16} className="text-white animate-spin" />
+              )}
+              
+              {/* Loading indicator */}
+              {isProcessing && !streamingContent && (
+                <div className="flex gap-3 p-4">
+                  <Avatar className="h-8 w-8 flex-shrink-0">
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      <RefreshCw size={16} className="animate-spin" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex items-center text-muted-foreground text-sm">
+                    AI is thinking...
+                  </div>
                 </div>
-                <div className="flex items-center text-gray-500">
-                  AI is thinking...
-                </div>
-              </div>
-            )}
-            
-            <div ref={messagesEndRef} />
-          </div>
-        )}
-      </div>
+              )}
+              
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+        </ScrollArea>
+      </CardContent>
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="p-4">
+        <Separator className="mb-4" />
         <div className="flex gap-3">
-          <textarea
+          <Textarea
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type your message... (Shift+Enter for new line)"
-            className="flex-1 p-3 border border-gray-200 dark:border-gray-600 rounded-lg resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows={1}
-            style={{ minHeight: '44px', maxHeight: '120px' }}
+            className="flex-1 resize-none min-h-[44px] max-h-[120px]"
             disabled={isProcessing}
           />
           
-          <button
+          <Button
             onClick={handleSendMessage}
             disabled={!inputMessage.trim() || isProcessing || !aiService}
-            className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            size="sm"
+            className="px-3"
           >
             <Send size={16} />
-          </button>
+          </Button>
         </div>
         
         {!providers[activeProvider] && (
-          <p className="mt-2 text-sm text-amber-600 dark:text-amber-400">
-            ⚠️ Please configure your AI provider in settings
-          </p>
+          <Alert className="mt-3">
+            <AlertDescription className="text-sm">
+              ⚠️ Please configure your AI provider in settings
+            </AlertDescription>
+          </Alert>
         )}
       </div>
-    </div>
+    </Card>
   )
 }

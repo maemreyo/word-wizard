@@ -1,8 +1,11 @@
 // Quota Indicator Component - Show user's usage and plan status
 // Clean React component following separation of concerns
 
-import React from 'react'
 import type { UserPlanType } from '../../lib/types'
+
+// shadcn/ui components
+import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
 
 interface QuotaIndicatorProps {
   remaining: number
@@ -32,14 +35,23 @@ export function QuotaIndicator({
 
   const currentPlan = planConfig[plan] || planConfig.free
 
+  const getPlanVariant = (planType: UserPlanType) => {
+    switch (planType) {
+      case 'pro': return 'default'
+      case 'premium': return 'secondary'
+      case 'enterprise': return 'outline'
+      default: return 'secondary'
+    }
+  }
+
   if (compact) {
     return (
-      <div className="quota-indicator compact">
-        <span className={`plan-badge plan-${plan}`}>
+      <div className="flex items-center gap-2 text-xs">
+        <Badge variant={getPlanVariant(plan)} className="text-xs">
           {currentPlan.emoji} {currentPlan.name}
-        </span>
+        </Badge>
         {!isUnlimited && (
-          <span className={`quota-text ${isLow ? 'low' : ''}`}>
+          <span className={`font-medium ${isLow ? 'text-destructive' : 'text-foreground'}`}>
             {remaining}/{limit}
           </span>
         )}
@@ -48,173 +60,39 @@ export function QuotaIndicator({
   }
 
   return (
-    <div className={`quota-indicator ${isLow ? 'low' : ''}`}>
-      <div className="quota-header">
-        <span className={`plan-badge plan-${plan}`}>
+    <div className={`flex flex-col gap-1 text-xs ${isLow ? 'text-destructive' : ''}`}>
+      <div className="flex justify-between items-center gap-2">
+        <Badge variant={getPlanVariant(plan)} className="text-xs">
           {currentPlan.emoji} {currentPlan.name}
-        </span>
+        </Badge>
         {!isUnlimited && (
-          <span className="quota-numbers">
+          <span className="font-medium text-foreground">
             {remaining} / {limit}
           </span>
         )}
       </div>
       
       {!isUnlimited && (
-        <div className="quota-bar-container">
-          <div className="quota-bar">
-            <div 
-              className={`quota-fill ${isLow ? 'low' : ''}`}
-              style={{ width: `${usagePercentage}%` }}
-            />
-          </div>
-          <div className="quota-label">
+        <div className="flex flex-col gap-1">
+          <Progress 
+            value={usagePercentage} 
+            className={`h-1 ${isLow ? '[&>div]:bg-destructive' : '[&>div]:bg-primary'}`}
+          />
+          <div className="text-xs">
             {isLow ? (
-              <span className="warning-text">⚠️ Running low</span>
+              <span className="text-destructive font-medium">⚠️ Running low</span>
             ) : (
-              <span className="normal-text">Lookups remaining</span>
+              <span className="text-muted-foreground">Lookups remaining</span>
             )}
           </div>
         </div>
       )}
 
       {isUnlimited && (
-        <div className="unlimited-indicator">
-          <span className="unlimited-text">♾️ Unlimited</span>
+        <div className="text-center py-1">
+          <span className="text-green-600 font-medium text-xs">♾️ Unlimited</span>
         </div>
       )}
     </div>
   )
 }
-
-// CSS styles for the component
-const styles = `
-.quota-indicator {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 12px;
-}
-
-.quota-indicator.compact {
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-}
-
-.quota-indicator.low {
-  color: var(--warning-color, #dc2626);
-}
-
-.quota-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
-
-.plan-badge {
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.plan-badge.plan-free {
-  background: var(--free-bg, #f3f4f6);
-  color: var(--free-text, #6b7280);
-}
-
-.plan-badge.plan-pro {
-  background: var(--pro-bg, #eff6ff);
-  color: var(--pro-text, #2563eb);
-}
-
-.plan-badge.plan-premium {
-  background: var(--premium-bg, #f3e8ff);
-  color: var(--premium-text, #7c3aed);
-}
-
-.plan-badge.plan-enterprise {
-  background: var(--enterprise-bg, #ecfdf5);
-  color: var(--enterprise-text, #059669);
-}
-
-.quota-numbers {
-  font-weight: 500;
-  color: var(--text-color, #374151);
-}
-
-.quota-text {
-  font-weight: 500;
-  color: var(--text-color, #374151);
-}
-
-.quota-text.low {
-  color: var(--warning-color, #dc2626);
-}
-
-.quota-bar-container {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.quota-bar {
-  width: 100%;
-  height: 3px;
-  background: var(--quota-bg, #e5e7eb);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.quota-fill {
-  height: 100%;
-  background: var(--quota-fill, #10b981);
-  border-radius: 2px;
-  transition: width 0.3s ease, background-color 0.3s ease;
-}
-
-.quota-fill.low {
-  background: var(--warning-color, #dc2626);
-}
-
-.quota-label {
-  font-size: 10px;
-  color: var(--secondary-text, #6b7280);
-}
-
-.warning-text {
-  color: var(--warning-color, #dc2626);
-  font-weight: 500;
-}
-
-.normal-text {
-  color: var(--secondary-text, #6b7280);
-}
-
-.unlimited-indicator {
-  text-align: center;
-  padding: 4px 0;
-}
-
-.unlimited-text {
-  color: var(--success-color, #10b981);
-  font-weight: 500;
-  font-size: 11px;
-}
-
-/* Responsive adjustments */
-@media (max-width: 400px) {
-  .quota-indicator:not(.compact) {
-    font-size: 11px;
-  }
-  
-  .plan-badge {
-    font-size: 9px;
-    padding: 1px 4px;
-  }
-}
-`

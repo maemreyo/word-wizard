@@ -1,8 +1,13 @@
 // Word Lookup Card Component - Display AI-analyzed vocabulary data
 // Clean React component following separation of concerns
 
-import React from 'react'
 import type { WordData } from '../../lib/types'
+
+// shadcn/ui components
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
 
 interface WordLookupCardProps {
   wordData: WordData
@@ -34,388 +39,191 @@ export function WordLookupCard({
   } = wordData
 
   return (
-    <div className={`word-lookup-card ${compact ? 'compact' : ''}`}>
+    <Card className={compact ? 'p-3' : ''}>
       {/* Header with word and pronunciation */}
-      <div className="word-header">
-        <div className="word-title">
-          <h3 className="word-term">{term}</h3>
+      <CardHeader className={`flex-row items-start justify-between space-y-0 ${compact ? 'pb-2' : 'pb-4'}`}>
+        <div className="flex-1">
+          <CardTitle className="text-xl text-primary mb-1">{term}</CardTitle>
           {ipa && (
-            <span className="word-pronunciation">
+            <p className="text-sm text-muted-foreground italic">
               /{ipa}/
-            </span>
+            </p>
           )}
         </div>
-        <div className="word-meta">
+        <div className="flex flex-col gap-2">
           {cefrLevel && (
-            <span className={`cefr-badge cefr-${cefrLevel.toLowerCase()}`}>
+            <Badge variant="secondary" className="text-xs">
               {cefrLevel}
-            </span>
+            </Badge>
           )}
           {domain && (
-            <span className={`domain-badge domain-${domain}`}>
+            <Badge variant="outline" className="text-xs">
               {domain}
-            </span>
+            </Badge>
           )}
         </div>
-      </div>
+      </CardHeader>
 
-      {/* Generated image if available */}
-      {imageUrl && !compact && (
-        <div className="word-image">
-          <img 
-            src={imageUrl} 
-            alt={`Visual representation of ${term}`}
-            className="vocab-image"
-            loading="lazy"
-          />
-        </div>
-      )}
-
-      {/* Definition */}
-      <div className="word-definition">
-        <h4 className="section-title">📖 Definition</h4>
-        <p className="definition-text">{definition}</p>
-      </div>
-
-      {/* Examples */}
-      {examples && examples.length > 0 && !compact && (
-        <div className="word-examples">
-          <h4 className="section-title">💬 Examples</h4>
-          <ul className="examples-list">
-            {examples.slice(0, 3).map((example, index) => (
-              <li key={index} className="example-item">
-                "{example}"
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Synonyms and Antonyms */}
-      {!compact && (synonyms?.length > 0 || antonyms?.length > 0) && (
-        <div className="word-relations">
-          {synonyms && synonyms.length > 0 && (
-            <div className="synonyms">
-              <h4 className="section-title">🔄 Synonyms</h4>
-              <div className="tags-container">
-                {synonyms.slice(0, 5).map((synonym, index) => (
-                  <span key={index} className="tag synonym-tag">
-                    {synonym}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {antonyms && antonyms.length > 0 && (
-            <div className="antonyms">
-              <h4 className="section-title">↔️ Antonyms</h4>
-              <div className="tags-container">
-                {antonyms.slice(0, 3).map((antonym, index) => (
-                  <span key={index} className="tag antonym-tag">
-                    {antonym}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Word Family */}
-      {wordFamily && wordFamily.length > 0 && !compact && (
-        <div className="word-family">
-          <h4 className="section-title">👥 Word Family</h4>
-          <div className="family-grid">
-            {wordFamily.slice(0, 4).map((item, index) => (
-              <div key={index} className="family-item">
-                <span className="family-type">{item.type}</span>
-                <span className="family-word">{item.word}</span>
-                <span className="family-definition">{item.definition}</span>
-              </div>
-            ))}
+      <CardContent className="space-y-4">
+        {/* Generated image if available */}
+        {imageUrl && !compact && (
+          <div className="text-center">
+            <img 
+              src={imageUrl} 
+              alt={`Visual representation of ${term}`}
+              className="max-w-full max-h-32 rounded-lg object-cover mx-auto"
+              loading="lazy"
+            />
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Topic classification */}
-      {primaryTopic && (
-        <div className="word-topic">
-          <span className="topic-label">🏷️ Topic:</span>
-          <span className="topic-value">{primaryTopic}</span>
+        {/* Definition */}
+        <div>
+          <h4 className="text-sm font-semibold mb-2 flex items-center gap-1">
+            📖 Definition
+          </h4>
+          <p className="text-sm leading-relaxed">{definition}</p>
         </div>
-      )}
 
-      {/* Save actions */}
-      {showSaveButtons && (
-        <div className="save-actions">
-          <h4 className="section-title">💾 Save to</h4>
-          <div className="save-buttons">
-            {onSaveToNotion && (
-              <button 
-                onClick={onSaveToNotion}
-                className="save-button notion-button"
-                title="Save to Notion"
-              >
-                📝 Notion
-              </button>
+        {/* Examples */}
+        {examples && examples.length > 0 && !compact && (
+          <div>
+            <h4 className="text-sm font-semibold mb-2 flex items-center gap-1">
+              💬 Examples
+            </h4>
+            <ul className="space-y-1">
+              {examples.slice(0, 3).map((example, index) => (
+                <li key={index} className="text-sm text-muted-foreground italic">
+                  "{example}"
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Synonyms and Antonyms */}
+        {!compact && (synonyms?.length > 0 || antonyms?.length > 0) && (
+          <div className="space-y-3">
+            {synonyms && synonyms.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold mb-2 flex items-center gap-1">
+                  🔄 Synonyms
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {synonyms.slice(0, 5).map((synonym, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs bg-blue-50 text-blue-700">
+                      {synonym}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
             )}
-            {onSaveToAnki && (
-              <button 
-                onClick={onSaveToAnki}
-                className="save-button anki-button"
-                title="Save to Anki"
-              >
-                🧠 Anki
-              </button>
+            
+            {antonyms && antonyms.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold mb-2 flex items-center gap-1">
+                  ↔️ Antonyms
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {antonyms.slice(0, 3).map((antonym, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs bg-red-50 text-red-700">
+                      {antonym}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Compact view shows only essential info */}
-      {compact && (
-        <div className="compact-summary">
-          {synonyms && synonyms.length > 0 && (
-            <div className="compact-synonyms">
-              <strong>Synonyms:</strong> {synonyms.slice(0, 3).join(', ')}
+        {/* Word Family */}
+        {wordFamily && wordFamily.length > 0 && !compact && (
+          <div>
+            <h4 className="text-sm font-semibold mb-2 flex items-center gap-1">
+              👥 Word Family
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {wordFamily.slice(0, 4).map((item, index) => (
+                <Card key={index} className="p-3 bg-muted/50">
+                  <div className="space-y-1">
+                    <Badge variant="outline" className="text-xs uppercase">
+                      {item.type}
+                    </Badge>
+                    <p className="font-semibold text-primary text-sm">{item.word}</p>
+                    <p className="text-xs text-muted-foreground leading-tight">
+                      {item.definition}
+                    </p>
+                  </div>
+                </Card>
+              ))}
             </div>
-          )}
-          {examples && examples.length > 0 && (
-            <div className="compact-example">
-              <strong>Example:</strong> "{examples[0]}"
+          </div>
+        )}
+
+        {/* Topic classification */}
+        {primaryTopic && (
+          <>
+            <Separator />
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">🏷️ Topic:</span>
+              <Badge variant="outline" className="text-primary font-medium">
+                {primaryTopic}
+              </Badge>
             </div>
-          )}
-        </div>
-      )}
-    </div>
+          </>
+        )}
+
+        {/* Save actions */}
+        {showSaveButtons && (
+          <>
+            <Separator />
+            <div>
+              <h4 className="text-sm font-semibold mb-3 flex items-center gap-1">
+                💾 Save to
+              </h4>
+              <div className="flex gap-2">
+                {onSaveToNotion && (
+                  <Button 
+                    onClick={onSaveToNotion}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 text-orange-600 border-orange-200 hover:bg-orange-50"
+                  >
+                    📝 Notion
+                  </Button>
+                )}
+                {onSaveToAnki && (
+                  <Button 
+                    onClick={onSaveToAnki}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 text-blue-600 border-blue-200 hover:bg-blue-50"
+                  >
+                    🧠 Anki
+                  </Button>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Compact view shows only essential info */}
+        {compact && (
+          <div className="space-y-2 text-sm">
+            {synonyms && synonyms.length > 0 && (
+              <div className="text-muted-foreground">
+                <strong>Synonyms:</strong> {synonyms.slice(0, 3).join(', ')}
+              </div>
+            )}
+            {examples && examples.length > 0 && (
+              <div className="text-muted-foreground">
+                <strong>Example:</strong> "{examples[0]}"
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 
-// CSS styles for the component (to be added to popup.css)
-const styles = `
-.word-lookup-card {
-  background: var(--card-background, #ffffff);
-  border: 1px solid var(--border-color, #e1e5e9);
-  border-radius: 12px;
-  padding: 16px;
-  margin-top: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.word-lookup-card.compact {
-  padding: 12px;
-  margin-top: 8px;
-}
-
-.word-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
-}
-
-.word-title {
-  flex: 1;
-}
-
-.word-term {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--primary-color, #2563eb);
-  margin: 0 0 4px 0;
-}
-
-.word-pronunciation {
-  font-size: 14px;
-  color: var(--secondary-text, #6b7280);
-  font-style: italic;
-}
-
-.word-meta {
-  display: flex;
-  gap: 8px;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.cefr-badge, .domain-badge {
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: uppercase;
-}
-
-.cefr-badge {
-  background: var(--cefr-bg, #f3f4f6);
-  color: var(--cefr-text, #374151);
-}
-
-.domain-badge {
-  background: var(--domain-bg, #eff6ff);
-  color: var(--domain-text, #1d4ed8);
-}
-
-.word-image {
-  margin: 12px 0;
-  text-align: center;
-}
-
-.vocab-image {
-  max-width: 100%;
-  max-height: 120px;
-  border-radius: 8px;
-  object-fit: cover;
-}
-
-.section-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-color, #374151);
-  margin: 12px 0 8px 0;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.definition-text {
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--text-color, #374151);
-  margin: 0;
-}
-
-.examples-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.example-item {
-  font-size: 13px;
-  color: var(--secondary-text, #6b7280);
-  margin-bottom: 4px;
-  font-style: italic;
-}
-
-.tags-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.tag {
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.synonym-tag {
-  background: var(--synonym-bg, #f0f9ff);
-  color: var(--synonym-text, #0369a1);
-}
-
-.antonym-tag {
-  background: var(--antonym-bg, #fef2f2);
-  color: var(--antonym-text, #dc2626);
-}
-
-.family-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 8px;
-}
-
-.family-item {
-  padding: 8px;
-  background: var(--family-bg, #f9fafb);
-  border-radius: 6px;
-  font-size: 12px;
-}
-
-.family-type {
-  display: block;
-  font-weight: 500;
-  color: var(--family-type, #6b7280);
-  text-transform: uppercase;
-}
-
-.family-word {
-  display: block;
-  font-weight: 600;
-  color: var(--primary-color, #2563eb);
-  margin: 2px 0;
-}
-
-.family-definition {
-  display: block;
-  color: var(--secondary-text, #6b7280);
-  line-height: 1.3;
-}
-
-.word-topic {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border-light, #f3f4f6);
-  font-size: 13px;
-}
-
-.topic-label {
-  color: var(--secondary-text, #6b7280);
-  margin-right: 8px;
-}
-
-.topic-value {
-  color: var(--primary-color, #2563eb);
-  font-weight: 500;
-}
-
-.save-actions {
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border-light, #f3f4f6);
-}
-
-.save-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-.save-button {
-  flex: 1;
-  padding: 8px 12px;
-  border: 1px solid var(--border-color, #e1e5e9);
-  border-radius: 6px;
-  background: white;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.save-button:hover {
-  background: var(--hover-bg, #f9fafb);
-}
-
-.notion-button {
-  border-color: var(--notion-color, #ff5733);
-  color: var(--notion-color, #ff5733);
-}
-
-.anki-button {
-  border-color: var(--anki-color, #0093ff);
-  color: var(--anki-color, #0093ff);
-}
-
-.compact-summary {
-  margin-top: 8px;
-  font-size: 12px;
-}
-
-.compact-synonyms, .compact-example {
-  margin-bottom: 4px;
-  color: var(--secondary-text, #6b7280);
-}
-`

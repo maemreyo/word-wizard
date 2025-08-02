@@ -1,18 +1,26 @@
 // Usage Tracker - Shows current usage and limits
 // Visual progress bars and upgrade prompts
 
-import React from 'react'
-import { 
-  BarChart3, 
-  Zap, 
-  MessageSquare, 
-  Clock, 
-  TrendingUp, 
-  AlertTriangle,
-  Crown
-} from 'lucide-react'
-import { useUsage, useSubscription, usePaymentActions } from '../lib/stores/payment-store'
 import { formatDistanceToNow } from 'date-fns'
+import {
+    AlertTriangle,
+    BarChart3,
+    Clock,
+    Crown,
+    MessageSquare,
+    Zap
+} from 'lucide-react'
+import React from 'react'
+import { usePaymentActions, useSubscription, useUsage } from '../lib/stores/payment-store'
+
+// shadcn/ui components
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import { Separator } from '@/components/ui/separator'
 
 interface UsageTrackerProps {
   className?: string
@@ -74,120 +82,115 @@ export const UsageTracker: React.FC<UsageTrackerProps> = ({
 
   if (!plan || !usage) {
     return (
-      <div className={`p-4 bg-gray-50 dark:bg-gray-800 rounded-lg ${className}`}>
-        <div className="flex items-center justify-center h-24">
-          <div className="text-gray-500 dark:text-gray-400 text-sm">
+      <Card className={className}>
+        <CardContent className="flex items-center justify-center h-24">
+          <div className="text-muted-foreground text-sm">
             Usage data not available
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
-    <div className={`bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 ${className}`}>
+    <Card className={className}>
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-              <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white">
-                Usage Overview
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {plan.displayName} Plan • {
-                  isActiveSubscription ? 'Active' : 'Inactive'
-                }
-              </p>
+      <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
+        <div className="flex items-center gap-3">
+          <Avatar>
+            <AvatarFallback className="bg-primary/10">
+              <BarChart3 className="w-5 h-5 text-primary" />
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <CardTitle className="text-base">Usage Overview</CardTitle>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">{plan.displayName} Plan</span>
+              <Badge variant={isActiveSubscription ? "default" : "secondary"}>
+                {isActiveSubscription ? 'Active' : 'Inactive'}
+              </Badge>
             </div>
           </div>
-
-          {!isActiveSubscription && (
-            <button
-              onClick={() => showUpgrade()}
-              className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-colors text-sm font-medium"
-            >
-              <Crown size={16} />
-              Upgrade
-            </button>
-          )}
         </div>
-      </div>
+
+        {!isActiveSubscription && (
+          <Button
+            onClick={() => showUpgrade()}
+            className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+            size="sm"
+          >
+            <Crown size={16} />
+            Upgrade
+          </Button>
+        )}
+      </CardHeader>
 
       {/* Usage Metrics */}
-      <div className="p-4">
-        <div className="space-y-4">
-          {usageItems.map((item) => {
-            const percentage = getUsagePercentage(item.used, item.limit)
-            const colorClasses = getUsageColor(percentage)
-            const isNearLimit = percentage >= 75 && item.limit !== -1
-            const Icon = item.icon
+      <CardContent className="space-y-6">
+        {usageItems.map((item) => {
+          const percentage = getUsagePercentage(item.used, item.limit)
+          const isNearLimit = percentage >= 75 && item.limit !== -1
+          const Icon = item.icon
 
-            return (
-              <div key={item.id} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Icon size={16} className="text-gray-600 dark:text-gray-400" />
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {item.name}
-                    </span>
-                    {isNearLimit && (
-                      <AlertTriangle size={16} className="text-yellow-500" />
-                    )}
-                  </div>
-                  
-                  <div className="text-right">
-                    <div className="font-semibold text-gray-900 dark:text-white">
-                      {formatUsage(item.used, item.limit)}
-                    </div>
-                    {item.limit !== -1 && (
-                      <div className={`text-sm ${colorClasses.split(' ')[0]}`}>
-                        {percentage.toFixed(0)}% used
-                      </div>
-                    )}
-                  </div>
+          return (
+            <div key={item.id} className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Icon size={16} className="text-muted-foreground" />
+                  <span className="font-medium">{item.name}</span>
+                  {isNearLimit && (
+                    <Badge variant="outline" className="text-yellow-600 border-yellow-300">
+                      <AlertTriangle size={12} className="mr-1" />
+                      Near Limit
+                    </Badge>
+                  )}
                 </div>
-
-                {/* Progress Bar */}
-                {item.limit !== -1 && (
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full transition-all duration-300 ${colorClasses.split(' ')[1]}`}
-                      style={{ width: `${percentage}%` }}
-                    />
+                
+                <div className="text-right">
+                  <div className="font-semibold">
+                    {formatUsage(item.used, item.limit)}
                   </div>
-                )}
-
-                {showDetails && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {item.description}
-                  </p>
-                )}
-
-                {/* Near limit warning */}
-                {isNearLimit && (
-                  <div className="p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
-                    <div className="flex items-center gap-2 text-sm text-yellow-700 dark:text-yellow-300">
-                      <AlertTriangle size={14} />
-                      <span>
-                        You're approaching your {item.name.toLowerCase()} limit. 
-                        {item.limit - item.used} remaining.
-                      </span>
+                  {item.limit !== -1 && (
+                    <div className="text-sm text-muted-foreground">
+                      {percentage.toFixed(0)}% used
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            )
-          })}
-        </div>
+
+              {/* Progress Bar */}
+              {item.limit !== -1 && (
+                <Progress 
+                  value={percentage} 
+                  className="h-2"
+                />
+              )}
+
+              {showDetails && (
+                <p className="text-xs text-muted-foreground">
+                  {item.description}
+                </p>
+              )}
+
+              {/* Near limit warning */}
+              {isNearLimit && (
+                <Alert>
+                  <AlertTriangle size={14} />
+                  <AlertDescription className="text-sm">
+                    You're approaching your {item.name.toLowerCase()} limit. 
+                    {item.limit - item.used} remaining.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          )
+        })}
 
         {/* Usage Period */}
         {usage.lastUpdated && (
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+          <>
+            <Separator />
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Clock size={14} />
                 <span>Current billing period</span>
@@ -196,68 +199,63 @@ export const UsageTracker: React.FC<UsageTrackerProps> = ({
                 Updated {formatDistanceToNow(usage.lastUpdated, { addSuffix: true })}
               </span>
             </div>
-          </div>
+          </>
         )}
 
         {/* Upgrade prompt for free users */}
         {!isActiveSubscription && (
-          <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-medium text-gray-900 dark:text-white mb-1">
-                  Unlock More Usage
-                </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Upgrade to get unlimited AI requests and advanced features
-                </p>
+          <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium mb-1">Unlock More Usage</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Upgrade to get unlimited AI requests and advanced features
+                  </p>
+                </div>
+                <Button onClick={() => showUpgrade()}>
+                  Upgrade
+                </Button>
               </div>
-              <button
-                onClick={() => showUpgrade()}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
-              >
-                Upgrade
-              </button>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Feature Access Status */}
         {showDetails && Object.keys(featureAccess).length > 0 && (
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <h4 className="font-medium text-gray-900 dark:text-white mb-3">
-              Feature Access
-            </h4>
-            <div className="grid grid-cols-2 gap-2">
-              {Object.entries(featureAccess).map(([featureId, access]) => (
-                <div
-                  key={featureId}
-                  className={`p-2 rounded-lg border ${
-                    access.hasAccess
-                      ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700'
-                      : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium capitalize">
-                      {featureId.replace('_', ' ')}
-                    </span>
-                    <div
-                      className={`w-2 h-2 rounded-full ${
-                        access.hasAccess ? 'bg-green-500' : 'bg-red-500'
-                      }`}
-                    />
-                  </div>
-                  {access.limit && access.used !== undefined && (
-                    <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                      {access.used}/{access.limit} used
-                    </div>
-                  )}
-                </div>
-              ))}
+          <>
+            <Separator />
+            <div>
+              <h4 className="font-medium mb-3">Feature Access</h4>
+              <div className="grid grid-cols-2 gap-2">
+                {Object.entries(featureAccess).map(([featureId, access]) => (
+                  <Card
+                    key={featureId}
+                    className={access.hasAccess ? 'border-green-200 bg-green-50/50' : 'border-red-200 bg-red-50/50'}
+                  >
+                    <CardContent className="p-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium capitalize">
+                          {featureId.replace('_', ' ')}
+                        </span>
+                        <Badge 
+                          variant={access.hasAccess ? "default" : "destructive"}
+                          className="h-2 w-2 p-0 rounded-full"
+                        />
+                      </div>
+                      {access.limit && access.used !== undefined && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {access.used}/{access.limit} used
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
-          </div>
+          </>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

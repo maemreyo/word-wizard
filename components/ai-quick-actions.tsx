@@ -1,21 +1,28 @@
 // AI Quick Actions - Quick AI processing buttons for selected text
 // Provides instant AI features without opening full chat interface
 
-import React, { useState } from 'react'
-import { 
-  FileText, 
-  Languages, 
-  Lightbulb, 
-  BarChart3, 
-  Mail, 
-  Hash,
-  Loader2,
-  Copy,
-  Check
+import {
+    BarChart3,
+    Check,
+    Copy,
+    FileText,
+    Hash,
+    Languages,
+    Lightbulb,
+    Loader2,
+    Mail
 } from 'lucide-react'
-import { useAIStore, useAIActions, useAIProviders, useEnabledFeatures } from '../lib/stores/ai-store'
+import React, { useState } from 'react'
 import { AIService } from '../lib/services/ai-service'
+import { useAIActions, useAIProviders, useAIStore, useEnabledFeatures } from '../lib/stores/ai-store'
 import type { AIProcessingResult } from '../lib/types'
+
+// shadcn/ui components
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
 
 interface AIQuickActionsProps {
   selectedText: string
@@ -45,7 +52,7 @@ export const AIQuickActions: React.FC<AIQuickActionsProps> = ({
       name: 'Summarize',
       icon: FileText,
       description: 'Create a concise summary',
-      color: 'bg-blue-500 hover:bg-blue-600',
+      variant: 'default' as const,
       enabled: enabledFeatures.some(f => f.id === 'summarize')
     },
     {
@@ -53,7 +60,7 @@ export const AIQuickActions: React.FC<AIQuickActionsProps> = ({
       name: 'Translate',
       icon: Languages,
       description: 'Translate to English',
-      color: 'bg-green-500 hover:bg-green-600',
+      variant: 'secondary' as const,
       enabled: enabledFeatures.some(f => f.id === 'translate')
     },
     {
@@ -61,7 +68,7 @@ export const AIQuickActions: React.FC<AIQuickActionsProps> = ({
       name: 'Explain',
       icon: Lightbulb,
       description: 'Get an explanation',
-      color: 'bg-yellow-500 hover:bg-yellow-600',
+      variant: 'outline' as const,
       enabled: enabledFeatures.some(f => f.id === 'explain')
     },
     {
@@ -69,7 +76,7 @@ export const AIQuickActions: React.FC<AIQuickActionsProps> = ({
       name: 'Sentiment',
       icon: BarChart3,
       description: 'Analyze sentiment',
-      color: 'bg-purple-500 hover:bg-purple-600',
+      variant: 'default' as const,
       enabled: enabledFeatures.some(f => f.id === 'analyze_sentiment')
     },
     {
@@ -77,7 +84,7 @@ export const AIQuickActions: React.FC<AIQuickActionsProps> = ({
       name: 'Email',
       icon: Mail,
       description: 'Generate email',
-      color: 'bg-red-500 hover:bg-red-600',
+      variant: 'secondary' as const,
       enabled: enabledFeatures.some(f => f.id === 'generate_email')
     },
     {
@@ -85,7 +92,7 @@ export const AIQuickActions: React.FC<AIQuickActionsProps> = ({
       name: 'Keywords',
       icon: Hash,
       description: 'Extract keywords',
-      color: 'bg-indigo-500 hover:bg-indigo-600',
+      variant: 'outline' as const,
       enabled: enabledFeatures.some(f => f.id === 'extract_keywords')
     }
   ]
@@ -181,131 +188,131 @@ export const AIQuickActions: React.FC<AIQuickActionsProps> = ({
 
   if (!selectedText.trim()) {
     return (
-      <div className={`p-4 text-center text-gray-500 ${className}`}>
-        <Lightbulb size={32} className="mx-auto mb-2 opacity-50" />
-        <p>Select text to see AI quick actions</p>
-      </div>
+      <Card className={className}>
+        <CardContent className="p-6 text-center">
+          <Lightbulb size={32} className="mx-auto mb-2 text-muted-foreground" />
+          <p className="text-muted-foreground">Select text to see AI quick actions</p>
+        </CardContent>
+      </Card>
     )
   }
 
   if (!isConfigured) {
     return (
-      <div className={`p-4 text-center ${className}`}>
-        <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-          <p className="text-amber-700 dark:text-amber-300">
-            ⚠️ Please configure your AI provider in settings to use quick actions
-          </p>
-        </div>
-      </div>
+      <Card className={className}>
+        <CardContent className="p-4">
+          <Alert>
+            <AlertDescription>
+              ⚠️ Please configure your AI provider in settings to use quick actions
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
-    <div className={`p-4 ${className}`}>
-      <div className="mb-4">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-1">
-          AI Quick Actions
-        </h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+    <Card className={className}>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm">AI Quick Actions</CardTitle>
+        <p className="text-xs text-muted-foreground">
           Selected: "{selectedText.slice(0, 50)}{selectedText.length > 50 ? '...' : ''}"
         </p>
-      </div>
+      </CardHeader>
 
-      <div className="grid grid-cols-2 gap-2 mb-4">
-        {quickActions
-          .filter(action => action.enabled)
-          .map((action) => {
-            const Icon = action.icon
-            const isProcessing = processingAction === action.id
-            const hasResult = results[action.id]
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-2">
+          {quickActions
+            .filter(action => action.enabled)
+            .map((action) => {
+              const Icon = action.icon
+              const isProcessing = processingAction === action.id
+              const hasResult = results[action.id]
 
-            return (
-              <button
-                key={action.id}
-                onClick={() => processWithAI(action.id)}
-                disabled={isProcessing || processingAction !== null}
-                className={`
-                  relative p-3 rounded-lg text-white text-sm font-medium
-                  transition-all duration-200 transform hover:scale-105
-                  disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-                  ${action.color}
-                  ${hasResult ? 'ring-2 ring-green-300' : ''}
-                `}
-                title={action.description}
-              >
-                <div className="flex items-center gap-2">
-                  {isProcessing ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : (
-                    <Icon size={16} />
-                  )}
-                  <span>{action.name}</span>
-                </div>
-                
-                {hasResult && !isProcessing && (
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
-                )}
-              </button>
-            )
-          })}
-      </div>
-
-      {/* Results */}
-      {Object.keys(results).length > 0 && (
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-            Results
-          </h4>
-          
-          {Object.entries(results).map(([actionId, result]) => {
-            const action = quickActions.find(a => a.id === actionId)
-            const isCopied = copiedAction === actionId
-            
-            return (
-              <div
-                key={actionId}
-                className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
-              >
-                <div className="flex items-center justify-between mb-2">
+              return (
+                <Button
+                  key={action.id}
+                  variant={action.variant}
+                  size="sm"
+                  onClick={() => processWithAI(action.id)}
+                  disabled={isProcessing || processingAction !== null}
+                  className={`relative h-auto p-3 ${hasResult ? 'ring-2 ring-green-500' : ''}`}
+                  title={action.description}
+                >
                   <div className="flex items-center gap-2">
-                    {action && <action.icon size={14} />}
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      {action?.name}
-                    </span>
+                    {isProcessing ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <Icon size={16} />
+                    )}
+                    <span className="text-xs">{action.name}</span>
                   </div>
                   
-                  <button
-                    onClick={() => copyResult(actionId)}
-                    className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
-                    title="Copy result"
-                  >
-                    {isCopied ? (
-                      <Check size={14} className="text-green-500" />
-                    ) : (
-                      <Copy size={14} className="text-gray-500" />
-                    )}
-                  </button>
-                </div>
-                
-                <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                  {result}
-                </div>
-              </div>
-            )
-          })}
+                  {hasResult && !isProcessing && (
+                    <Badge className="absolute -top-1 -right-1 h-3 w-3 p-0 bg-green-500">
+                      <Check size={8} />
+                    </Badge>
+                  )}
+                </Button>
+              )
+            })}
         </div>
-      )}
 
-      {processingAction && (
-        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
-            <Loader2 size={16} className="animate-spin" />
-            <span className="text-sm">
-              Processing with {activeProvider}...
-            </span>
+        {/* Results */}
+        {Object.keys(results).length > 0 && (
+          <div className="space-y-3">
+            <Separator />
+            <h4 className="text-sm font-medium">Results</h4>
+            
+            {Object.entries(results).map(([actionId, result]) => {
+              const action = quickActions.find(a => a.id === actionId)
+              const isCopied = copiedAction === actionId
+              
+              return (
+                <Card key={actionId} className="bg-muted/50">
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        {action && <action.icon size={14} />}
+                        <span className="text-sm font-medium">
+                          {action?.name}
+                        </span>
+                      </div>
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyResult(actionId)}
+                        className="h-6 w-6 p-0"
+                        title="Copy result"
+                      >
+                        {isCopied ? (
+                          <Check size={14} className="text-green-500" />
+                        ) : (
+                          <Copy size={14} />
+                        )}
+                      </Button>
+                    </div>
+                    
+                    <div className="text-sm whitespace-pre-wrap">
+                      {result}
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
-        </div>
-      )}
-    </div>
+        )}
+
+        {processingAction && (
+          <Alert>
+            <Loader2 size={16} className="animate-spin" />
+            <AlertDescription>
+              Processing with {activeProvider}...
+            </AlertDescription>
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
   )
 }

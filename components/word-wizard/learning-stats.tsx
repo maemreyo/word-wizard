@@ -1,8 +1,12 @@
 // Learning Stats Component - Track vocabulary learning progress and analytics
 // Clean React component following separation of concerns
 
-import React from 'react'
 import type { UserPlanType } from '../../lib/types'
+
+// shadcn/ui components
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
 
 interface LearningStatsData {
   totalWords: number
@@ -64,13 +68,16 @@ export function LearningStats({ stats, quotaStatus }: LearningStatsProps) {
     return num.toString()
   }
 
-  const renderProgressBar = (percentage: number, color: string = '#10b981') => (
-    <div className="progress-bar">
-      <div 
-        className="progress-fill" 
-        style={{ width: `${percentage}%`, backgroundColor: color }}
-      />
-    </div>
+  const renderProgressBar = (percentage: number, variant: 'default' | 'success' | 'warning' | 'destructive' = 'default') => (
+    <Progress 
+      value={percentage} 
+      className={`h-2 ${
+        variant === 'success' ? '[&>div]:bg-green-500' :
+        variant === 'warning' ? '[&>div]:bg-yellow-500' :
+        variant === 'destructive' ? '[&>div]:bg-red-500' :
+        '[&>div]:bg-primary'
+      }`}
+    />
   )
 
   const renderDifficultyChart = () => {
@@ -139,162 +146,254 @@ export function LearningStats({ stats, quotaStatus }: LearningStatsProps) {
   }
 
   return (
-    <div className="learning-stats">
+    <div className="space-y-6">
       {/* Overview Cards */}
-      <div className="stats-overview">
-        <div className="stat-card primary">
-          <div className="stat-icon">📚</div>
-          <div className="stat-content">
-            <div className="stat-number">{formatNumber(totalWords)}</div>
-            <div className="stat-label">Total Words</div>
-          </div>
-        </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl mb-2">📚</div>
+            <div className="text-2xl font-bold text-primary">{formatNumber(totalWords)}</div>
+            <div className="text-sm text-muted-foreground">Total Words</div>
+          </CardContent>
+        </Card>
 
-        <div className="stat-card success">
-          <div className="stat-icon">✅</div>
-          <div className="stat-content">
-            <div className="stat-number">{masteryPercentage}%</div>
-            <div className="stat-label">Mastery Rate</div>
-            {renderProgressBar(masteryPercentage, '#10b981')}
-          </div>
-        </div>
+        <Card>
+          <CardContent className="p-4 text-center space-y-2">
+            <div className="text-2xl mb-2">✅</div>
+            <div className="text-2xl font-bold text-green-600">{masteryPercentage}%</div>
+            <div className="text-sm text-muted-foreground">Mastery Rate</div>
+            {renderProgressBar(masteryPercentage, 'success')}
+          </CardContent>
+        </Card>
 
-        <div className="stat-card warning">
-          <div className="stat-icon">🔥</div>
-          <div className="stat-content">
-            <div className="stat-number">{currentStreak}</div>
-            <div className="stat-label">Current Streak</div>
-            <div className="stat-subtitle">Best: {longestStreak} days</div>
-          </div>
-        </div>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl mb-2">🔥</div>
+            <div className="text-2xl font-bold text-orange-600">{currentStreak}</div>
+            <div className="text-sm text-muted-foreground">Current Streak</div>
+            <div className="text-xs text-muted-foreground">Best: {longestStreak} days</div>
+          </CardContent>
+        </Card>
 
-        <div className="stat-card info">
-          <div className="stat-icon">📊</div>
-          <div className="stat-content">
-            <div className="stat-number">{averageDaily.toFixed(1)}</div>
-            <div className="stat-label">Daily Average</div>
-          </div>
-        </div>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <div className="text-2xl mb-2">📊</div>
+            <div className="text-2xl font-bold text-blue-600">{averageDaily.toFixed(1)}</div>
+            <div className="text-sm text-muted-foreground">Daily Average</div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Goals Progress */}
-      <div className="goals-section">
-        <h3 className="section-title">🎯 Goals Progress</h3>
-        
-        <div className="goal-item">
-          <div className="goal-header">
-            <span className="goal-label">Weekly Goal</span>
-            <span className="goal-progress">{wordsThisWeek} / {weeklyGoal}</span>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            🎯 Goals Progress
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">Weekly Goal</span>
+              <span className="text-sm text-muted-foreground">{wordsThisWeek} / {weeklyGoal}</span>
+            </div>
+            {renderProgressBar(weeklyProgress, 'default')}
           </div>
-          {renderProgressBar(weeklyProgress, '#2563eb')}
-        </div>
 
-        <div className="goal-item">
-          <div className="goal-header">
-            <span className="goal-label">Monthly Goal</span>
-            <span className="goal-progress">{wordsThisMonth} / {monthlyGoal}</span>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">Monthly Goal</span>
+              <span className="text-sm text-muted-foreground">{wordsThisMonth} / {monthlyGoal}</span>
+            </div>
+            {renderProgressBar(monthlyProgress, 'default')}
           </div>
-          {renderProgressBar(monthlyProgress, '#7c3aed')}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Activity Chart */}
-      <div className="activity-section">
-        <h3 className="section-title">📈 Weekly Activity</h3>
-        {renderWeeklyActivity()}
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            📈 Weekly Activity
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-end justify-between h-20 gap-1">
+            {dailyProgress.slice(-7).map((day, index) => {
+              const maxCount = Math.max(...dailyProgress.slice(-7).map(d => d.count), 1)
+              const height = (day.count / maxCount) * 100
+              return (
+                <div key={index} className="flex flex-col items-center gap-1 flex-1">
+                  <div 
+                    className={`w-full rounded-t ${day.count > 0 ? 'bg-green-500' : 'bg-muted'} transition-all`}
+                    style={{ height: `${height}%` }}
+                    title={`${day.date}: ${day.count} words`}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(day.date).toLocaleDateString('en', { weekday: 'short' })}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Difficulty Breakdown */}
-      <div className="difficulty-section">
-        <h3 className="section-title">📊 Difficulty Breakdown</h3>
-        {renderDifficultyChart()}
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            📊 Difficulty Breakdown
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {(() => {
+            const total = difficultyBreakdown.easy + difficultyBreakdown.medium + difficultyBreakdown.hard
+            if (total === 0) return <div className="text-muted-foreground text-sm">No data available</div>
+            
+            return (
+              <div className="space-y-4">
+                <div className="flex items-end justify-center h-24 gap-4">
+                  <div className="flex flex-col items-center gap-2">
+                    <div 
+                      className="w-8 bg-green-500 rounded-t"
+                      style={{ height: `${(difficultyBreakdown.easy / total) * 100}%` }}
+                      title={`Easy: ${difficultyBreakdown.easy} words`}
+                    />
+                    <span className="text-xs font-medium">{difficultyBreakdown.easy}</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-2">
+                    <div 
+                      className="w-8 bg-yellow-500 rounded-t"
+                      style={{ height: `${(difficultyBreakdown.medium / total) * 100}%` }}
+                      title={`Medium: ${difficultyBreakdown.medium} words`}
+                    />
+                    <span className="text-xs font-medium">{difficultyBreakdown.medium}</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-2">
+                    <div 
+                      className="w-8 bg-red-500 rounded-t"
+                      style={{ height: `${(difficultyBreakdown.hard / total) * 100}%` }}
+                      title={`Hard: ${difficultyBreakdown.hard} words`}
+                    />
+                    <span className="text-xs font-medium">{difficultyBreakdown.hard}</span>
+                  </div>
+                </div>
+                <div className="flex justify-center gap-4 text-xs">
+                  <span className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-green-500 rounded"></div>
+                    Easy
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-yellow-500 rounded"></div>
+                    Medium
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-red-500 rounded"></div>
+                    Hard
+                  </span>
+                </div>
+              </div>
+            )
+          })()}
+        </CardContent>
+      </Card>
 
       {/* Top Topics */}
-      <div className="topics-section">
-        <h3 className="section-title">🏷️ Top Topics</h3>
-        <div className="topics-list">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            🏷️ Top Topics
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
           {Object.entries(topicsBreakdown)
             .sort(([,a], [,b]) => b - a)
             .slice(0, 5)
             .map(([topic, count]) => (
-              <div key={topic} className="topic-item">
-                <span className="topic-name">{topic}</span>
-                <span className="topic-count">{count} words</span>
-                <div className="topic-bar">
-                  <div 
-                    className="topic-fill"
-                    style={{ 
-                      width: `${(count / Math.max(...Object.values(topicsBreakdown))) * 100}%` 
-                    }}
-                  />
+              <div key={topic} className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium capitalize">{topic}</span>
+                  <span className="text-sm text-muted-foreground">{count} words</span>
                 </div>
+                <Progress 
+                  value={(count / Math.max(...Object.values(topicsBreakdown))) * 100}
+                  className="h-2"
+                />
               </div>
             ))}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Quota Status */}
-      <div className="quota-section">
-        <h3 className="section-title">💎 Usage Status</h3>
-        <div className="quota-info">
-          <div className="quota-plan">
-            <span className={`plan-badge plan-${quotaStatus.plan}`}>
-              {quotaStatus.plan.toUpperCase()} PLAN
-            </span>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            💎 Usage Status
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Badge variant="outline" className="text-xs uppercase">
+              {quotaStatus.plan} PLAN
+            </Badge>
           </div>
           
           {quotaStatus.limit > 0 ? (
-            <div className="quota-usage">
-              <div className="quota-numbers">
-                <span className="remaining">{quotaStatus.remaining}</span>
-                <span className="separator">/</span>
-                <span className="limit">{quotaStatus.limit}</span>
-                <span className="label">lookups remaining</span>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Lookups remaining</span>
+                <span className="text-sm font-medium">
+                  {quotaStatus.remaining} / {quotaStatus.limit}
+                </span>
               </div>
               {renderProgressBar(
                 ((quotaStatus.limit - quotaStatus.remaining) / quotaStatus.limit) * 100,
-                quotaStatus.remaining <= quotaStatus.limit * 0.2 ? '#ef4444' : '#10b981'
+                quotaStatus.remaining <= quotaStatus.limit * 0.2 ? 'destructive' : 'success'
               )}
             </div>
           ) : (
-            <div className="unlimited-status">
-              <span className="unlimited-text">♾️ Unlimited lookups</span>
+            <div className="text-center py-2">
+              <span className="text-green-600 font-medium">♾️ Unlimited lookups</span>
             </div>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Achievement Hints */}
-      <div className="achievements-section">
-        <h3 className="section-title">🏆 Next Achievements</h3>
-        <div className="achievement-hints">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            🏆 Next Achievements
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
           {currentStreak < 7 && (
-            <div className="achievement-hint">
-              <span className="achievement-icon">🔥</span>
-              <span className="achievement-text">
+            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+              <span className="text-xl">🔥</span>
+              <span className="text-sm">
                 {7 - currentStreak} more days for "Week Warrior"
               </span>
             </div>
           )}
           {masteredWords < 100 && (
-            <div className="achievement-hint">
-              <span className="achievement-icon">💯</span>
-              <span className="achievement-text">
+            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+              <span className="text-xl">💯</span>
+              <span className="text-sm">
                 {100 - masteredWords} more words for "Century Scholar"
               </span>
             </div>
           )}
           {totalWords < 500 && (
-            <div className="achievement-hint">
-              <span className="achievement-icon">📚</span>
-              <span className="achievement-text">
+            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+              <span className="text-xl">📚</span>
+              <span className="text-sm">
                 {500 - totalWords} more words for "Vocabulary Master"
               </span>
             </div>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
