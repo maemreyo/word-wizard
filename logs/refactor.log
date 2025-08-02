@@ -1,0 +1,5 @@
+Chú ý nguyên tắc separate of concern, hiện tại, các file đều đang dùng kiểu, export từ file index, và trong đó import các module con. Dùng pattern đó, update vào serena memory để dùng nó xuyên suốt codebase.
+Lên plan chi tiết để move toàn bộ business logic và bắt đầu triển khai. 
+use serena
+
+Research plasmo xem cach sử dụng tailwindcss trong repo thế nào, tôi cần dùng tailwind thay vì styles raw như hiện tại.

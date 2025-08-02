@@ -1,37 +1,64 @@
-// Side Panel Component - Extended UI for more complex interactions
-// Provides more space and features than popup
+// Word Wizard Side Panel - IELTS Study Mode with batch processing
+// Advanced vocabulary learning features for serious students
 
 import { useState, useEffect } from "react"
-import { useFeatureProcessing } from "./hooks/use-feature-processing"
-import { useStorageData } from "./hooks/use-storage-data"
-import type { FeatureData, ProcessResult } from "./lib/types"
+import { 
+  useWordWizardActions, 
+  useLookupState, 
+  useBatchState,
+  useLearningState,
+  useUserState 
+} from "./lib/stores"
+import { WordLookupCard } from "./components/word-wizard/word-lookup-card"
+import { IELTSBatchProcessor } from "./components/word-wizard/ielts-batch-processor"
+import { VocabularyHistory } from "./components/word-wizard/vocabulary-history"
+import { LearningStats } from "./components/word-wizard/learning-stats"
+import { QuotaIndicator } from "./components/word-wizard/quota-indicator"
 
 import "./styles/sidepanel.css"
 
 export default function SidePanel() {
-  const [inputText, setInputText] = useState("")
-  const [history, setHistory] = useState<ProcessResult[]>([])
-  const [activeTab, setActiveTab] = useState<'process' | 'history' | 'settings'>('process')
+  const [activeTab, setActiveTab] = useState<'ielts' | 'lookup' | 'history' | 'stats'>('ielts')
+  const [selectedText, setSelectedText] = useState("")
+
+  // Word Wizard stores
+  const { 
+    lookupWord, 
+    processBatch,
+    clearCurrentLookup,
+    clearBatch 
+  } = useWordWizardActions()
 
   const { 
-    processFeature, 
-    isLoading, 
-    result, 
-    error,
-    clearResult 
-  } = useFeatureProcessing()
+    currentLookup, 
+    isLookingUp, 
+    error: lookupError 
+  } = useLookupState()
 
   const {
-    data: storageData,
-    updateData: updateStorageData
-  } = useStorageData()
+    words: batchWords,
+    results: batchResults,
+    isProcessing: isBatchProcessing,
+    error: batchError
+  } = useBatchState()
 
-  // Listen for messages from background script
+  const {
+    history: vocabularyHistory,
+    stats: learningStats
+  } = useLearningState()
+
+  const {
+    plan,
+    quotaRemaining,
+    quotaLimit
+  } = useUserState()
+
+  // Listen for messages from popup and background script
   useEffect(() => {
     const messageListener = (message: any) => {
-      if (message.type === "SIDEPANEL_DATA" && message.selectedText) {
-        setInputText(message.selectedText)
-        setActiveTab('process')
+      if (message.type === "OPEN_SIDE_PANEL" && message.data?.selectedText) {
+        setSelectedText(message.data.selectedText)
+        setActiveTab('lookup')
       }
     }
 
@@ -39,155 +66,98 @@ export default function SidePanel() {
     return () => chrome.runtime.onMessage.removeListener(messageListener)
   }, [])
 
-  // Load history from storage
-  useEffect(() => {
-    const loadHistory = async () => {
-      try {
-        const response = await chrome.runtime.sendMessage({
-          type: "STORAGE_OPERATION",
-          operation: "get",
-          key: "processing_history"
-        })
+  const canUseBatch = plan !== 'free' // Batch processing is premium feature
 
-        if (response.success && response.data.processing_history) {
-          setHistory(response.data.processing_history)
-        }
-      } catch (error) {
-        console.error("Failed to load history:", error)
-      }
-    }
-
-    loadHistory()
-  }, [])
-
-  // Save result to history
-  useEffect(() => {
-    if (result) {
-      const newHistory = [result, ...history.slice(0, 49)] // Keep last 50 items
-      setHistory(newHistory)
-
-      // Save to storage
-      chrome.runtime.sendMessage({
-        type: "STORAGE_OPERATION",
-        operation: "set",
-        key: "processing_history",
-        value: newHistory
-      }).catch(console.error)
-    }
-  }, [result])
-
-  const handleProcess = async () => {
-    if (!inputText.trim()) return
-
-    const featureData: FeatureData = {
-      input: inputText.trim(),
-      options: {
-        priority: 'normal',
-        timeout: 30000
-      }
-    }
-
-    await processFeature(featureData)
-  }
-
-  const handleClearHistory = async () => {
-    setHistory([])
-    try {
-      await chrome.runtime.sendMessage({
-        type: "STORAGE_OPERATION",
-        operation: "remove",
-        key: "processing_history"
-      })
-    } catch (error) {
-      console.error("Failed to clear history:", error)
-    }
-  }
-
-  const handleExportHistory = () => {
-    const dataStr = JSON.stringify(history, null, 2)
-    const dataBlob = new Blob([dataStr], { type: 'application/json' })
-    const url = URL.createObjectURL(dataBlob)
-    
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `extension-history-${new Date().toISOString().split('T')[0]}.json`
-    link.click()
-    
-    URL.revokeObjectURL(url)
-  }
-
-  const renderProcessTab = () => (
+  const renderIELTSTab = () => (
     <div className="tab-content">
-      <div className="input-section">
-        <label htmlFor="sidepanel-input" className="input-label">
-          Enter text to process:
-        </label>
-        <textarea
-          id="sidepanel-input"
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          placeholder="Type or paste text here..."
-          className="input-textarea large"
-          rows={6}
-          disabled={isLoading}
-        />
+      <div className="tab-header">
+        <h3>📚 IELTS Vocabulary Mode</h3>
+        <p className="tab-description">
+          Batch process 5-25 words for comprehensive synonym analysis
+        </p>
       </div>
 
-      <div className="actions-section">
-        <button
-          onClick={handleProcess}
-          disabled={!inputText.trim() || isLoading}
-          className="primary-button"
-        >
-          {isLoading ? (
-            <>
-              <span className="spinner-small"></span>
-              Processing...
-            </>
-          ) : (
-            'Process Text'
-          )}
-        </button>
+      <IELTSBatchProcessor
+        disabled={!canUseBatch}
+        onUpgradeNeeded={() => chrome.runtime.openOptionsPage()}
+        quotaRemaining={quotaRemaining}
+      />
 
-        {result && (
-          <button
-            onClick={clearResult}
-            className="secondary-button"
+      {batchResults.length > 0 && (
+        <div className="batch-results">
+          <div className="results-header">
+            <h4>📊 Batch Results ({batchResults.length})</h4>
+            <button onClick={clearBatch} className="secondary-button">
+              Clear Results
+            </button>
+          </div>
+          <div className="results-grid">
+            {batchResults.map((result, index) => (
+              <div key={index} className="batch-result-item">
+                {result.synonyms.source !== 'error' ? (
+                  <WordLookupCard 
+                    wordData={result.synonyms}
+                    compact={true}
+                  />
+                ) : (
+                  <div className="error-card">
+                    <h5>{result.word}</h5>
+                    <p className="error-text">{result.synonyms.definition}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+
+  const renderLookupTab = () => (
+    <div className="tab-content">
+      <div className="tab-header">
+        <h3>🔍 Individual Word Lookup</h3>
+        <p className="tab-description">
+          Detailed analysis of single words or phrases
+        </p>
+      </div>
+
+      {selectedText && (
+        <div className="selected-text-section">
+          <label>📝 Text from page:</label>
+          <div className="selected-text-display">"{selectedText}"</div>
+          <button 
+            onClick={() => lookupWord({ term: selectedText })}
+            disabled={isLookingUp}
+            className="primary-button"
           >
-            Clear Result
+            {isLookingUp ? '🧙‍♂️ Analyzing...' : '🧙‍♂️ Analyze This Text'}
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
-      {error && (
+      {lookupError && (
         <div className="error-section">
           <div className="error-message">
-            <strong>Error:</strong> {error}
+            <strong>⚠️ Error:</strong> {lookupError}
           </div>
         </div>
       )}
 
-      {result && (
-        <div className="result-section">
-          <h3>Result:</h3>
-          <div className="result-content">
-            <div className="result-item">
-              <label>Input:</label>
-              <div className="result-text">{result.input}</div>
-            </div>
-            <div className="result-item">
-              <label>Output:</label>
-              <div className="result-text">{result.output.result}</div>
-            </div>
-            {result.output.metadata && (
-              <div className="result-metadata">
-                <small>
-                  Processed at: {new Date(result.timestamp).toLocaleString()} • 
-                  Processing time: {Math.round(result.output.metadata.processingTime)}ms
-                </small>
-              </div>
-            )}
-          </div>
+      {currentLookup && (
+        <div className="lookup-result">
+          <WordLookupCard 
+            wordData={currentLookup}
+            showSaveButtons={true}
+            onSaveToNotion={() => {/* TODO: Implement manual save */}}
+            onSaveToAnki={() => {/* TODO: Implement manual save */}}
+          />
+        </div>
+      )}
+
+      {!selectedText && !currentLookup && (
+        <div className="lookup-hint">
+          <p>💡 Select text on any webpage and click the Word Wizard icon, or use the popup for quick lookups.</p>
         </div>
       )}
     </div>
@@ -195,138 +165,91 @@ export default function SidePanel() {
 
   const renderHistoryTab = () => (
     <div className="tab-content">
-      <div className="history-header">
-        <h3>Processing History</h3>
-        <div className="history-actions">
-          <button onClick={handleExportHistory} className="secondary-button">
-            Export
-          </button>
-          <button onClick={handleClearHistory} className="danger-button">
-            Clear All
-          </button>
-        </div>
+      <div className="tab-header">
+        <h3>📚 Vocabulary History</h3>
+        <p className="tab-description">
+          Your learning progress and word collection
+        </p>
       </div>
 
-      {history.length === 0 ? (
-        <div className="empty-state">
-          <p>No processing history yet.</p>
-          <p>Process some text to see results here.</p>
-        </div>
-      ) : (
-        <div className="history-list">
-          {history.map((item, index) => (
-            <div key={item.id} className="history-item">
-              <div className="history-item-header">
-                <span className="history-index">#{history.length - index}</span>
-                <span className="history-timestamp">
-                  {new Date(item.timestamp).toLocaleString()}
-                </span>
-              </div>
-              <div className="history-item-content">
-                <div className="history-input">
-                  <label>Input:</label>
-                  <p>{item.input}</p>
-                </div>
-                <div className="history-output">
-                  <label>Output:</label>
-                  <p>{item.output.result}</p>
-                </div>
-              </div>
-              <div className="history-item-actions">
-                <button
-                  onClick={() => setInputText(item.input)}
-                  className="small-button"
-                >
-                  Reuse Input
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <VocabularyHistory 
+        history={vocabularyHistory}
+        onWordClick={(word) => lookupWord({ term: word.term })}
+        onExport={() => {/* TODO: Implement export */}}
+        onClear={() => {/* TODO: Implement clear */}}
+      />
     </div>
   )
 
-  const renderSettingsTab = () => (
+  const renderStatsTab = () => (
     <div className="tab-content">
-      <h3>Settings</h3>
-      
-      <div className="settings-section">
-        <h4>Processing Options</h4>
-        <div className="setting-item">
-          <label>
-            <input type="checkbox" defaultChecked />
-            Enable caching
-          </label>
-          <p className="setting-description">
-            Cache results to improve performance
-          </p>
-        </div>
-        <div className="setting-item">
-          <label>
-            <input type="checkbox" defaultChecked />
-            Auto-save to history
-          </label>
-          <p className="setting-description">
-            Automatically save all processed results
-          </p>
-        </div>
+      <div className="tab-header">
+        <h3>📊 Learning Analytics</h3>
+        <p className="tab-description">
+          Track your vocabulary learning progress
+        </p>
       </div>
 
-      <div className="settings-section">
-        <h4>Storage</h4>
-        <div className="setting-item">
-          <button className="secondary-button">
-            Clear All Data
-          </button>
-          <p className="setting-description">
-            Remove all stored data and reset extension
-          </p>
-        </div>
-      </div>
-
-      <div className="settings-section">
-        <h4>About</h4>
-        <div className="about-info">
-          <p><strong>Chrome Extension Starter</strong></p>
-          <p>Version: 1.0.0</p>
-          <p>Clean architecture template for Chrome extensions</p>
-        </div>
-      </div>
+      <LearningStats 
+        stats={learningStats}
+        quotaStatus={{ remaining: quotaRemaining, limit: quotaLimit, plan }}
+      />
     </div>
   )
 
   return (
-    <div className="sidepanel-container">
+    <div className="sidepanel-container word-wizard-sidepanel">
       <header className="sidepanel-header">
-        <h1>Extension Starter</h1>
+        <div className="header-content">
+          <h1>🧙‍♂️ Word Wizard</h1>
+          <QuotaIndicator 
+            remaining={quotaRemaining}
+            limit={quotaLimit}
+            plan={plan}
+            compact={true}
+          />
+        </div>
+        <div className="header-subtitle">IELTS Study Mode</div>
       </header>
 
       <nav className="sidepanel-nav">
         <button
-          className={`nav-button ${activeTab === 'process' ? 'active' : ''}`}
-          onClick={() => setActiveTab('process')}
+          className={`nav-button ${activeTab === 'ielts' ? 'active' : ''}`}
+          onClick={() => setActiveTab('ielts')}
+          title="Batch process words for IELTS preparation"
         >
-          Process
+          📚 IELTS
+          {!canUseBatch && <span className="premium-badge">PRO</span>}
+        </button>
+        <button
+          className={`nav-button ${activeTab === 'lookup' ? 'active' : ''}`}
+          onClick={() => setActiveTab('lookup')}
+          title="Individual word analysis"
+        >
+          🔍 Lookup
         </button>
         <button
           className={`nav-button ${activeTab === 'history' ? 'active' : ''}`}
           onClick={() => setActiveTab('history')}
+          title="Your vocabulary collection"
         >
-          History ({history.length})
+          📚 History
+          <span className="count-badge">{vocabularyHistory.length}</span>
         </button>
         <button
-          className={`nav-button ${activeTab === 'settings' ? 'active' : ''}`}
-          onClick={() => setActiveTab('settings')}
+          className={`nav-button ${activeTab === 'stats' ? 'active' : ''}`}
+          onClick={() => setActiveTab('stats')}
+          title="Learning progress and statistics"
         >
-          Settings
+          📊 Stats
         </button>
       </nav>
 
       <main className="sidepanel-main">
-        {activeTab === 'process' && renderProcessTab()}
+        {activeTab === 'ielts' && renderIELTSTab()}
+        {activeTab === 'lookup' && renderLookupTab()}
         {activeTab === 'history' && renderHistoryTab()}
-        {activeTab === 'settings' && renderSettingsTab()}
+        {activeTab === 'stats' && renderStatsTab()}
       </main>
     </div>
   )

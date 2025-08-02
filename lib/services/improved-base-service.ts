@@ -79,6 +79,18 @@ export abstract class ImprovedBaseService {
     }
   }
 
+  // PATCH request with type safety
+  protected async patch<T>(url: string, data?: any, options?: KyOptions): Promise<T> {
+    try {
+      return await this.client.patch(url, {
+        json: data,
+        ...options
+      }).json<T>()
+    } catch (error) {
+      throw this.handleError(error, 'PATCH request')
+    }
+  }
+
   // DELETE request with type safety
   protected async delete<T>(url: string, options?: KyOptions): Promise<T> {
     try {

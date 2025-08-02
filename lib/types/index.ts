@@ -418,11 +418,68 @@ export interface AIStore {
   enabledFeatures: string[]
 }
 
+// Word Wizard Types - Complete vocabulary learning business logic
+export type {
+  // Core data structures
+  WordData,
+  WordFamilyItem,
+  LookupRequest,
+  LookupOptions,
+  AnalysisResult,
+  
+  // Batch processing
+  BatchRequest,
+  BatchOptions,
+  BatchResult,
+  
+  // External integrations
+  NotionConfig,
+  NotionSaveRequest,
+  NotionSaveResult,
+  AnkiConfig,
+  AnkiSaveRequest,
+  AnkiSaveResult,
+  
+  // Learning and analytics
+  LearningStats,
+  LearningProgress,
+  ReviewSession,
+  ReviewItem,
+  
+  // User and monetization
+  WordWizardSettings,
+  UserPlan,
+  PlanFeatures,
+  PlanLimits,
+  QuotaStatus,
+  CustomAIProvider,
+  
+  // System types
+  WordWizardError,
+  WordCacheEntry,
+  WordWizardApiRequest,
+  WordWizardApiResponse,
+  WordWizardEndpoints,
+  
+  // Type unions
+  LookupMethod,
+  LearningContext,
+  WordDifficulty,
+  WordDomain,
+  UserPlanType,
+  ProcessingPriority,
+  
+  // Utility types
+  RequiredLookupRequest,
+  WordDataWithoutSystem,
+  PartialWordData
+} from './word-wizard-types'
+
 // Export commonly used type unions
 export type Theme = 'light' | 'dark' | 'auto'
 export type Environment = 'development' | 'staging' | 'production'
-export type MessageType = 'PROCESS_FEATURE' | 'API_CALL' | 'STORAGE_OPERATION' | 'OPEN_SIDE_PANEL' | 'AI_CHAT' | 'AI_PROCESS' | string
-export type ErrorCode = 'UNKNOWN_ERROR' | 'VALIDATION_ERROR' | 'API_ERROR' | 'STORAGE_ERROR' | 'AI_ERROR' | string
+export type MessageType = 'PROCESS_FEATURE' | 'API_CALL' | 'STORAGE_OPERATION' | 'OPEN_SIDE_PANEL' | 'AI_CHAT' | 'AI_PROCESS' | 'WORD_WIZARD_LOOKUP' | 'WORD_WIZARD_BATCH' | 'WORD_WIZARD_SAVE' | string
+export type ErrorCode = 'UNKNOWN_ERROR' | 'VALIDATION_ERROR' | 'API_ERROR' | 'STORAGE_ERROR' | 'AI_ERROR' | 'QUOTA_EXCEEDED' | 'RATE_LIMITED' | string
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 // Logger Service Types
 export interface LogEntry {
