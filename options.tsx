@@ -1,15 +1,16 @@
 // Word Wizard Options Page - Settings and configuration for vocabulary learning
 // Full-page settings interface with AI, integrations, and subscription management
 
-import { useState, useEffect } from "react"
-import { 
-  useWordWizardActions, 
-  useUserState, 
+import { useEffect, useState } from "react"
+import {
+  useAIStore,
   useIntegrationSettings,
-  useAIStore
+  useUserState,
+  useWordWizardActions
 } from "./lib/stores"
-import type { UserPlanType, NotionConfig, AnkiConfig, AIProvider } from "./lib/types"
+import type { AIProvider } from "./lib/types"
 
+import React from "react"
 import "./styles/options.css"
 
 export default function OptionsPage() {
