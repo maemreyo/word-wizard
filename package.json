@@ -1,9 +1,9 @@
 {
-  "name": "chrome-extension-starter",
-  "displayName": "Chrome Extension Starter - Clean Architecture",
+  "name": "word-wizard",
+  "displayName": "Word Wizard - AI-Powered IELTS Vocabulary Learning",
   "version": "1.0.0",
-  "description": "A Chrome extension starter with clean architecture patterns, TypeScript, React, and best practices",
-  "author": "Chrome Extension Team",
+  "description": "AI-powered vocabulary learning tool for IELTS students with intelligent word lookup, context analysis, and spaced repetition integration",
+  "author": "Word Wizard Team",
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",
@@ -72,6 +72,7 @@
     "prismjs": "^1.29.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "sharp": "^0.34.3",
     "stripe": "^14.25.0",
     "tailwind-merge": "^3.3.1",
     "tw-animate-css": "^1.3.6",
@@ -118,6 +119,24 @@
           "default": "Alt+Shift+E"
         },
         "description": "Execute main extension action"
+      },
+      "lookup-word": {
+        "suggested_key": {
+          "default": "Ctrl+Shift+W"
+        },
+        "description": "🧙‍♂️ Word Wizard lookup selected text"
+      },
+      "open-sidepanel": {
+        "suggested_key": {
+          "default": "Ctrl+Shift+S"
+        },
+        "description": "📚 Open IELTS Study Mode sidepanel"
+      },
+      "quick-highlight": {
+        "suggested_key": {
+          "default": "Ctrl+Shift+Q"
+        },
+        "description": "🎯 Quick Word Wizard highlight"
       }
     },
     "side_panel": {
