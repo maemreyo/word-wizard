@@ -1,0 +1,3 @@
+1. Tôi cần bạn đánh giá xem việc triển khai ứng dụng như trong /docs/business có phù hợp với codebase này không. 
+2. Về mặt technical, logic trong business có phù hợp không? cần sửa thế nào để hợp lý về mặt technical và business? Có thể tạo file mới để update logic business. Vì tôi thấy flow trong business khá rườm rà, ví dụ: dashboard, api-proxy đang làm việc, hãy trả lời câu hỏi xem codebase hiện tại giúp ích cho việc xử lý rườm rà thế nào?
+Đánh giá và trả lời 2 câu hỏi trên. use serena
