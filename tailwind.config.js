@@ -5,14 +5,23 @@ module.exports = {
     './components/**/*.{ts,tsx}',
     './lib/**/*.{ts,tsx}',
     './hooks/**/*.{ts,tsx}',
+    './src/**/*.{ts,tsx}',
     '!./node_modules/**/*'
   ],
   darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        // Custom color palette for Chrome Extension
+        // shadcn/ui color system
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
         primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+          // Preserve existing Chrome Extension primary colors
           50: '#eff6ff',
           100: '#dbeafe',
           200: '#bfdbfe',
@@ -26,6 +35,9 @@ module.exports = {
           950: '#172554'
         },
         secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+          // Preserve existing Chrome Extension secondary colors
           50: '#f8fafc',
           100: '#f1f5f9',
           200: '#e2e8f0',
@@ -38,6 +50,44 @@ module.exports = {
           900: '#0f172a',
           950: '#020617'
         },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          primary: "hsl(var(--sidebar-primary))",
+          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          accent: "hsl(var(--sidebar-accent))",
+          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
+          border: "hsl(var(--sidebar-border))",
+          ring: "hsl(var(--sidebar-ring))",
+        },
+        chart: {
+          1: "hsl(var(--chart-1))",
+          2: "hsl(var(--chart-2))",
+          3: "hsl(var(--chart-3))",
+          4: "hsl(var(--chart-4))",
+          5: "hsl(var(--chart-5))",
+        },
+        // Preserve existing Chrome Extension colors
         success: {
           50: '#f0fdf4',
           500: '#22c55e',
@@ -56,6 +106,13 @@ module.exports = {
           600: '#dc2626',
           700: '#b91c1c'
         }
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+        // Preserve existing Chrome Extension border radius
+        '4xl': '2rem'
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
