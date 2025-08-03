@@ -1,4 +1,5 @@
 // components/ui-showcase.tsx - Demo component showcasing all shadcn/ui components
+import React from 'react'
 import {
     Accordion,
     AccordionContent,
@@ -70,11 +71,10 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { AlertTriangleIcon, CheckCircleIcon, InfoIcon } from 'lucide-react'
-import { useState } from 'react'
 
 export function UIShowcase() {
-  const [isChecked, setIsChecked] = useState(false)
-  const [switchValue, setSwitchValue] = useState(false)
+  const [isChecked, setIsChecked] = React.useState(false)
+  const [switchValue, setSwitchValue] = React.useState(false)
 
   return (
     <TooltipProvider>
@@ -246,7 +246,7 @@ export function UIShowcase() {
                   <Checkbox 
                     id="terms" 
                     checked={isChecked}
-                    onCheckedChange={setIsChecked}
+                    onCheckedChange={(checked) => setIsChecked(checked === true)}
                   />
                   <Label htmlFor="terms">Accept terms and conditions</Label>
                 </div>

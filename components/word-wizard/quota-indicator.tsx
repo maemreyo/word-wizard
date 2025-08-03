@@ -1,6 +1,7 @@
 // Quota Indicator Component - Show user's usage and plan status
 // Clean React component following separation of concerns
 
+import React from 'react'
 import type { UserPlanType } from '../../lib/types'
 
 // shadcn/ui components

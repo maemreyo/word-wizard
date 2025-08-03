@@ -1,6 +1,7 @@
 // Learning Stats Component - Track vocabulary learning progress and analytics
 // Clean React component following separation of concerns
 
+import React from 'react'
 import type { UserPlanType } from '../../lib/types'
 
 // shadcn/ui components

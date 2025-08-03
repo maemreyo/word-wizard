@@ -1,7 +1,7 @@
 // Word Wizard Options Page - Settings and configuration for vocabulary learning
 // Full-page settings interface with AI, integrations, and subscription management
 
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import {
   useAIStore,
   useIntegrationSettings,
@@ -9,8 +9,6 @@ import {
   useWordWizardActions
 } from "./lib/stores"
 import type { AIProvider } from "./lib/types"
-
-import React from "react"
 import "./styles/options.css"
 
 export default function OptionsPage() {
@@ -395,10 +393,7 @@ export default function OptionsPage() {
             id="notion-token"
             type="password"
             value={notion.token || ''}
-            onChange={(e) => updateNotionSettings({
-              ...notion,
-              token: e.target.value
-            })}
+            onChange={(e) => updateNotionSettings(e.target.value.length > 0)}
             placeholder="Enter your Notion integration token"
           />
           <p className="setting-description">
@@ -412,10 +407,7 @@ export default function OptionsPage() {
             id="notion-database"
             type="text"
             value={notion.databaseId || ''}
-            onChange={(e) => updateNotionSettings({
-              ...notion,
-              databaseId: e.target.value
-            })}
+            onChange={(e) => updateNotionSettings(notion.enabled, e.target.value)}
             placeholder="Paste your Notion database ID"
           />
           <p className="setting-description">
@@ -454,10 +446,7 @@ export default function OptionsPage() {
             min="1000"
             max="65535"
             value={anki.port || 8765}
-            onChange={(e) => updateAnkiSettings({
-              ...anki,
-              port: parseInt(e.target.value) || 8765
-            })}
+            onChange={(e) => updateAnkiSettings(anki.enabled, anki.deckName || '')}
           />
           <p className="setting-description">
             🔌 Default AnkiConnect port is 8765. Make sure AnkiConnect addon is installed.
@@ -470,10 +459,7 @@ export default function OptionsPage() {
             id="anki-deck"
             type="text"
             value={anki.deckName || ''}
-            onChange={(e) => updateAnkiSettings({
-              ...anki,
-              deckName: e.target.value
-            })}
+            onChange={(e) => updateAnkiSettings(anki.enabled, e.target.value)}
             placeholder="Word Wizard Vocabulary"
           />
           <p className="setting-description">

@@ -39,7 +39,7 @@ const notionConfigSchema = z.object({
   examplesProperty: z.string().default('Examples'),
   topicProperty: z.string().default('Topic'),
   statusProperty: z.string().default('Status'),
-  customFields: z.record(z.string()).optional()
+  customFields: z.record(z.string(), z.string()).optional()
 })
 
 const notionSaveRequestSchema = z.object({

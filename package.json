@@ -25,6 +25,7 @@
     "analyze": "npm run build && npx webpack-bundle-analyzer build/static/js/*.js",
     "clean": "rm -rf build dist .plasmo node_modules/.cache",
     "reinstall": "npm run clean && npm install",
+    "fix-sharp": "node scripts/fix-sharp.js",
     "validate": "npm run typecheck && npm run lint && npm run test:ci",
     "prepare": "husky install || true",
     "release": "semantic-release"

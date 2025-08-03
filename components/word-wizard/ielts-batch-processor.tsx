@@ -2,7 +2,7 @@
 // Clean React component following separation of concerns
 
 import React, { useState } from 'react'
-import { useWordWizardActions, useBatchState } from '../../lib/stores'
+import { useBatchState, useWordWizardActions } from '../../lib/stores'
 
 interface IELTSBatchProcessorProps {
   disabled?: boolean
@@ -22,8 +22,7 @@ export function IELTSBatchProcessor({
   const { 
     words: batchWords,
     isProcessing,
-    error: batchError,
-    progress 
+    error: batchError
   } = useBatchState()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -59,18 +58,7 @@ export function IELTSBatchProcessor({
       if (!proceed) return
     }
 
-    await processBatch({
-      words,
-      mode: processingMode,
-      options: {
-        includeImage: false, // Disabled for batch to save quota
-        includeExamples: processingMode === 'comprehensive',
-        includeWordFamily: processingMode === 'comprehensive',
-        saveToNotion: false, // Manual save for batch results
-        saveToAnki: false,
-        complexityLevel: 'intermediate'
-      }
-    })
+    await processBatch()
   }
 
   const handleClear = () => {
@@ -162,7 +150,7 @@ export function IELTSBatchProcessor({
             {isProcessing ? (
               <>
                 <span className="spinner-small"></span>
-                Processing... ({progress}/{wordCount})
+                Processing... ({batchWords.length}/{wordCount})
               </>
             ) : (
               `🚀 Analyze ${wordCount} Words`

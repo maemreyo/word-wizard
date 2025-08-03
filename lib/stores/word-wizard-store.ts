@@ -323,14 +323,14 @@ export const useWordWizardStore = create<WordWizardState>()(
             set((state) => ({
               vocabularyHistory: parsedHistory,
               learningStats: { ...state.learningStats, ...parsedStats },
-              notionEnabled: parsedSettings.notionEnabled || false,
-              notionDatabaseId: parsedSettings.notionDatabaseId || null,
-              ankiEnabled: parsedSettings.ankiEnabled || false,
-              ankiDeckName: parsedSettings.ankiDeckName || null,
-              autoSaveEnabled: parsedSettings.autoSaveEnabled !== false,
-              lookupMode: parsedSettings.lookupMode || 'popup',
-              complexityLevel: parsedSettings.complexityLevel || 'intermediate',
-              showImageGeneration: parsedSettings.showImageGeneration || false
+              notionEnabled: (parsedSettings as any).notionEnabled || false,
+              notionDatabaseId: (parsedSettings as any).notionDatabaseId || null,
+              ankiEnabled: (parsedSettings as any).ankiEnabled || false,
+              ankiDeckName: (parsedSettings as any).ankiDeckName || null,
+              autoSaveEnabled: (parsedSettings as any).autoSaveEnabled !== false,
+              lookupMode: (parsedSettings as any).lookupMode || 'popup',
+              complexityLevel: (parsedSettings as any).complexityLevel || 'intermediate',
+              showImageGeneration: (parsedSettings as any).showImageGeneration || false
             }))
           } catch (error) {
             console.error('Failed to load Word Wizard data:', error)

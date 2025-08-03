@@ -1,7 +1,7 @@
 // Save Options Component - Configure auto-save settings
 // Clean React component following separation of concerns
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useWordWizardActions } from '../../lib/stores'
 
 // shadcn/ui components

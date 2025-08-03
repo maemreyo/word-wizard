@@ -208,12 +208,12 @@ export interface ExtensionSettings {
 
 export interface WordWizardState {
   isProcessing: boolean
-  currentLookup?: WordData
-  history: WordData[]
-  cache: Map<string, WordData>
+  currentLookup?: import('./word-wizard-types').WordData
+  history: import('./word-wizard-types').WordData[]
+  cache: Map<string, import('./word-wizard-types').WordData>
   integrations: {
-    notion: NotionConfig
-    anki: AnkiConfig
+    notion: import('./word-wizard-types').NotionConfig
+    anki: import('./word-wizard-types').AnkiConfig
   }
 }
 

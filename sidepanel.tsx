@@ -1,7 +1,7 @@
 // Word Wizard Side Panel - IELTS Study Mode with batch processing
 // Advanced vocabulary learning features for serious students
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { 
   useWordWizardActions, 
   useLookupState, 

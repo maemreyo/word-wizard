@@ -1,6 +1,7 @@
 // Word Lookup Card Component - Display AI-analyzed vocabulary data
 // Clean React component following separation of concerns
 
+import React from 'react'
 import type { WordData } from '../../lib/types'
 
 // shadcn/ui components

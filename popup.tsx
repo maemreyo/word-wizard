@@ -1,7 +1,7 @@
 // Word Wizard Popup Component - AI-powered vocabulary lookup
 // Clean React component following separation of concerns
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { 
   useWordWizardActions, 
   useLookupState, 
