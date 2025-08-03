@@ -13,7 +13,7 @@ import { ImprovedBaseService } from './improved-base-service'
 
 // AI Configuration Schema
 const aiConfigSchema = z.object({
-  provider: z.enum(['openai', 'anthropic', 'custom']),
+  provider: z.enum(['openai', 'anthropic', 'google', 'custom']),
   apiKey: z.string().min(1),
   model: z.string().min(1),
   baseUrl: z.string().url().optional(),

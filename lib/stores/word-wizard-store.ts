@@ -153,15 +153,18 @@ export const useWordWizardStore = create<WordWizardState>()(
           try {
             const orchestrator = getOrchestrator(state.userId || undefined)
             
-            // Build complete request with user preferences
-            const fullRequest: LookupRequest = {
+            // Build complete request with user preferences and required defaults
+            const fullRequest = {
               ...request,
               userId: state.userId || undefined,
               options: {
                 includeImage: state.showImageGeneration,
+                includeExamples: request.options?.includeExamples ?? true,
+                includeWordFamily: request.options?.includeWordFamily ?? true,
                 complexityLevel: state.complexityLevel,
                 saveToNotion: state.notionEnabled && state.autoSaveEnabled,
                 saveToAnki: state.ankiEnabled && state.autoSaveEnabled,
+                generateSynonyms: request.options?.generateSynonyms ?? false,
                 ...request.options
               }
             }

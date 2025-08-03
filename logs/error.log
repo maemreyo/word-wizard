@@ -1,0 +1,29 @@
+
+tất cả các phần view như:
+1. popup (không có gì)
+2. sidepanel (trắng)
+3. newtab (chưa trigger được)
+4. context menu (chưa có gì)
+
+Bạn cần rà soát lại @business folder để tìm xem các UI thế nào, để làm các phần đó, hoặc đang lỗi gì mà nó không hề show
+
+Tôi thấy một số lỗi trong log của Extension:
+```
+{"icons":{"16":"icon16.plasmo.9f44d99c.png","32":"icon32.plasmo.83dbbbab.png","48":"icon48.plasmo.a78c509e.png","64":"icon64.plasmo.15206795.png","128":"icon128.plasmo.c11f39af.png"},"manifest_version":3,"action":{"default_icon":{"16":"icon16.plasmo.9f44d99c.png","32":"icon32.plasmo.83dbbbab.png","48":"icon48.plasmo.a78c509e.png","64":"icon64.plasmo.15206795.png","128":"icon128.plasmo.c11f39af.png"},"default_popup":"popup.html"},"version":"1.0.0","author":"Word Wizard Team","name":"DEV | Word Wizard - AI-Powered IELTS Vocabulary Learning","description":"AI-powered vocabulary learning tool for IELTS students with intelligent word lookup, context analysis, and spaced repetition integration","background":{"service_worker":"static/background/index.js"},"options_ui":{"page":"options.html","open_in_tab":true},"side_panel":{"default_path":"sidepanel.html"},"permissions":["storage","sidePanel","activeTab","contextMenus","tabs"],"content_scripts":[{"matches":["<all_urls>"],"js":["content.672cac6b.js"],"css":[]}],"host_permissions":["https://*/*"],"commands":{"main-action":{"suggested_key":{"default":"Alt+Shift+E"},"description":"Execute main extension action"},"lookup-word":{"suggested_key":{"default":"Ctrl+Shift+W"},"description":"🧙‍♂️ Word Wizard lookup selected text"},"open-sidepanel":{"suggested_key":{"default":"Ctrl+Shift+S"},"description":"📚 Open IELTS Study Mode sidepanel"},"quick-highlight":{"suggested_key":{"default":"Ctrl+Shift+Q"},"description":"🎯 Quick Word Wizard highlight"}},"options_page":"options.html","content_security_policy":{"extension_pages":"script-src 'self' http://localhost;object-src 'self';"},"web_accessible_resources":[{"matches":["<all_urls>"],"resources":["__plasmo_hmr_proxy__"]}]}
+```
+và 
+```
+// Schema definitions
+const featureDataSchema = (0, _zod.z).object({
+    input: (0, _zod.z).string().min(1, "Input cannot be empty").max(10000, "Input too long"),
+    options: (0, _zod.z).object({
+        timeout: (0, _zod.z).number().min(1000).max(300000).optional(),
+        retries: (0, _zod.z).number().min(0).max(5).optional(),
+        priority: (0, _zod.z).enum([
+            "low",
+            "normal",
+            "high"
+        ]).optional()
+    }).optional()
+});
+```

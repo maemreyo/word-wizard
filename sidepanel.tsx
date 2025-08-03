@@ -173,7 +173,17 @@ export default function SidePanel() {
       </div>
 
       <VocabularyHistory 
-        history={vocabularyHistory}
+        history={vocabularyHistory.map((wordData, index) => ({
+          id: `vocab_${wordData.timestamp}_${index}`,
+          term: wordData.term,
+          definition: wordData.definition,
+          timestamp: new Date(wordData.timestamp),
+          lookupCount: 1,
+          lastViewed: new Date(wordData.timestamp),
+          mastered: false,
+          difficulty: 'medium' as const,
+          source: 'sidepanel' as const
+        }))}
         onWordClick={(word) => lookupWord({ term: word.term })}
         onExport={() => {/* TODO: Implement export */}}
         onClear={() => {/* TODO: Implement clear */}}
@@ -191,7 +201,24 @@ export default function SidePanel() {
       </div>
 
       <LearningStats 
-        stats={learningStats}
+        stats={{
+          totalWords: learningStats.totalWords,
+          masteredWords: learningStats.masteredWords,
+          wordsThisWeek: learningStats.weeklyProgress,
+          wordsThisMonth: learningStats.weeklyProgress * 4,
+          averageDaily: Math.round(learningStats.weeklyProgress / 7),
+          longestStreak: learningStats.currentStreak,
+          currentStreak: learningStats.currentStreak,
+          difficultyBreakdown: {
+            easy: 0,
+            medium: 0,
+            hard: 0
+          },
+          topicsBreakdown: {},
+          dailyProgress: [],
+          weeklyGoal: 50,
+          monthlyGoal: 200
+        }}
         quotaStatus={{ remaining: quotaRemaining, limit: quotaLimit, plan }}
       />
     </div>

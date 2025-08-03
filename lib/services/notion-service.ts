@@ -181,7 +181,7 @@ export class NotionService extends ImprovedBaseService {
       })
 
       // Check if required properties exist
-      const properties = response.properties || {}
+      const properties = (response as any).properties || {}
       const requiredProps = [
         config.titleProperty || 'Word',
         config.definitionProperty || 'Definition'
@@ -275,7 +275,7 @@ export class NotionService extends ImprovedBaseService {
         headers: this.getNotionHeaders(config.apiKey)
       })
 
-      return response.id
+      return (response as any).id
 
     } catch (error) {
       throw new Error(`Failed to create Notion database: ${error.message}`)
@@ -291,7 +291,7 @@ export class NotionService extends ImprovedBaseService {
         headers: this.getNotionHeaders(apiKey)
       })
 
-      return response.properties || {}
+      return (response as any).properties || {}
 
     } catch (error) {
       throw new Error(`Failed to get database schema: ${error.message}`)
@@ -409,8 +409,8 @@ export class NotionService extends ImprovedBaseService {
     })
 
     return {
-      pageId: response.id,
-      pageUrl: response.url
+      pageId: (response as any).id,
+      pageUrl: (response as any).url
     }
   }
 
@@ -460,7 +460,7 @@ export class NotionService extends ImprovedBaseService {
       headers: this.getNotionHeaders(config.apiKey)
     })
 
-    return response.url
+    return (response as any).url
   }
 
   private getNotionHeaders(apiKey: string): Record<string, string> {

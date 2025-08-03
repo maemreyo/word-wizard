@@ -1,17 +1,16 @@
 // AI Store - Zustand store for AI functionality
 // Manages AI conversations, providers, and processing state
 
+import { Storage } from '@plasmohq/storage'
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
-import { Storage } from '@plasmohq/storage'
-import type { 
+import type {
   AIConfig,
-  AIProvider,
   AIConversation,
-  ChatMessage,
-  AIProcessingResult,
   AIFeature,
-  AICapability
+  AIProcessingResult,
+  AIProvider,
+  ChatMessage
 } from '../types'
 
 const storage = new Storage()
@@ -129,6 +128,7 @@ const defaultFeatures: AIFeature[] = [
 const defaultModels: Record<AIProvider, string[]> = {
   openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-3.5-turbo'],
   anthropic: ['claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229'],
+  google: ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-pro', 'gemini-2.5-flash', 'gemini-2.0-flash-preview-image-generation'],
   custom: ['custom-model-1']
 }
 
@@ -140,6 +140,7 @@ export const useAIStore = create<AIState>()(
         providers: {
           openai: null,
           anthropic: null,
+          google: null,
           custom: null
         },
         activeProvider: 'openai',
