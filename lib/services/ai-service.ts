@@ -3,6 +3,7 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import OpenAI from 'openai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { z } from 'zod'
 import type {
   AICapability,
@@ -25,6 +26,7 @@ const aiConfigSchema = z.object({
 export class AIService extends ImprovedBaseService {
   private openai?: OpenAI
   private anthropic?: Anthropic
+  private google?: GoogleGenerativeAI
   private config: z.infer<typeof aiConfigSchema>
 
   constructor(config: z.infer<typeof aiConfigSchema>) {
@@ -50,6 +52,10 @@ export class AIService extends ImprovedBaseService {
         })
         break
         
+      case 'google':
+        this.google = new GoogleGenerativeAI(this.config.apiKey)
+        break
+        
       case 'custom':
         // Initialize custom HTTP client for other providers
         super.setApiKey(this.config.apiKey)
@@ -72,6 +78,9 @@ export class AIService extends ImprovedBaseService {
           
         case 'anthropic':
           return await this.chatWithAnthropic(messages, mergedOptions)
+          
+        case 'google':
+          return await this.chatWithGoogle(messages, mergedOptions)
           
         case 'custom':
           return await this.chatWithCustomProvider(messages, mergedOptions)
@@ -177,6 +186,42 @@ export class AIService extends ImprovedBaseService {
       model: message.model,
       provider: 'anthropic',
       finishReason: message.stop_reason || 'end_turn'
+    }
+  }
+
+  // Google Gemini implementation
+  private async chatWithGoogle(
+    messages: ChatMessage[], 
+    options: any
+  ): Promise<AIResponse> {
+    if (!this.google) throw new Error('Google client not initialized')
+
+    const model = this.google.getGenerativeModel({ model: this.config.model })
+    
+    // Convert messages to Google format
+    const history = messages.slice(0, -1).map(msg => ({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.content }]
+    }))
+    
+    const lastMessage = messages[messages.length - 1]
+    
+    const chat = model.startChat({ history })
+    const result = await chat.sendMessage(lastMessage.content)
+    
+    const response = await result.response
+    const text = response.text()
+
+    return {
+      content: text,
+      usage: {
+        totalTokens: 0, // Google doesn't provide token usage in the same way
+        promptTokens: 0,
+        completionTokens: 0
+      },
+      model: this.config.model,
+      provider: 'google',
+      finishReason: 'stop'
     }
   }
 
